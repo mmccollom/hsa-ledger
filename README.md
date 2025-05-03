@@ -1,4 +1,4 @@
-# Mercury
+# HSA Ledger
 
 **HSA Ledger** is a web-based HSA ledger built with **Blazor WebAssembly**, **.NET**, and **PostgreSQL**. It follows a **Clean Architecture** structure, applying modern development practices like **CQRS with MediatR**, **FluentValidation**, and containerized development using **Docker**.
 
