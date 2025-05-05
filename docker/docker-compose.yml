@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  webapi:
+    build:
+      context: ../
+      dockerfile: src/Server/Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - postgres2
+
+  postgres2:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: hsa
+      POSTGRES_PASSWORD: dev_testing!
+      POSTGRES_DB: hsa_ledger
+    ports:
+      - "5433:5432"
+    volumes:
+      - /usr/local/postgres2:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d

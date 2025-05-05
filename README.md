@@ -71,7 +71,7 @@ hsa-ledger/
 AWS_ACCESS_KEY_ID=your_aws_access_key_id
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 AWS_REGION=your_aws_region
-ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=hsa_ledger;Username=hsa;Password=dev_testing!
+ConnectionStrings__DefaultConnection=Host=postgres;Port=5433;Database=hsa_ledger;Username=hsa;Password=dev_testing!
 ```
 
 > ⚠️ Do **not** commit this file to version control. It contains sensitive credentials.
