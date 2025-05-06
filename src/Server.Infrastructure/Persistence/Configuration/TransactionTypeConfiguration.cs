@@ -13,5 +13,7 @@ public class TransactionTypeConfiguration : IEntityTypeConfiguration<Transaction
 
         builder.HasMany(x => x.Providers)
             .WithMany(x => x.TransactionTypes);
+        
+        builder.HasIndex(x => x.Code).IsUnique();
     }
 }

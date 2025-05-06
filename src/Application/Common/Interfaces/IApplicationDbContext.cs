@@ -12,4 +12,5 @@ public interface IApplicationDbContext
     DbSet<Provider> Providers { get; }
     DbSet<Transaction> Transactions { get; }
     DbSet<TransactionType> TransactionTypes { get; }
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

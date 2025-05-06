@@ -9,5 +9,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
     public void Configure(EntityTypeBuilder<Person> builder)
     {
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

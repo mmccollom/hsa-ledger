@@ -12,5 +12,7 @@ public class ProviderConfiguration : IEntityTypeConfiguration<Provider>
         
         builder.HasMany(x => x.TransactionTypes)
             .WithMany(x => x.Providers);
+        
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }
