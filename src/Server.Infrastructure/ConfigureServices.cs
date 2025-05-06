@@ -23,7 +23,7 @@ public static class ConfigureServices
         });
         
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-        //services.AddScoped<ApplicationDbContextInitializer>();
+        services.AddScoped<ApplicationDbContextInitializer>();
         services.AddTransient<ICurrentUserService, CurrentUserService>();
         services.AddTransient<IDateTime, DateTimeService>();
         //services.AddTransient<IExcelService, ExcelService>();

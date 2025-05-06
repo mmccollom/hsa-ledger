@@ -38,7 +38,7 @@ public class JwtTokenGenerator
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expires = DateTime.UtcNow.AddMinutes(60);
+        var expires = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_config["Jwt:ExpiresInMinutes"]));
 
         var token = new JwtSecurityToken(
             _config["Jwt:Issuer"],

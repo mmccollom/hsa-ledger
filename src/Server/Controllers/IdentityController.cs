@@ -51,7 +51,7 @@ public class IdentityController : ApiControllerBase
             values: new { userId = user.Id, token });
 
         Console.WriteLine(confirmUrl);
-        // Send `confirmUrl` via email here...
+        // TODO: Send `confirmUrl` via email here...
 
         return await Result<string>.SuccessAsync("User registered. Confirmation email sent.");
     }
@@ -77,7 +77,7 @@ public class IdentityController : ApiControllerBase
     public async Task<Result<IdentityRequests.AuthResponse>> Login(LoginRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.Email);
-        if (user == null)
+        if (user is not { IsEnabled: true })
             return await Result<IdentityRequests.AuthResponse>.FailAsync("Invalid login.");
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
@@ -119,11 +119,33 @@ public class IdentityController : ApiControllerBase
     }
 
     [HttpPost]
+    [Route("setEnabled")]
+    //[Authorize(Roles = "Administrator")]
+    [Authorize]
+    public async Task<Result<string>> SetRoles(IdentityRequests.SetEnabledRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null) return await Result<string>.FailAsync("User not found.");
+
+        var existingRoles = await _userManager.GetRolesAsync(user);
+        var removeResult = await _userManager.RemoveFromRolesAsync(user, existingRoles);
+        if (!removeResult.Succeeded)
+            return await Result<string>.FailAsync(removeResult.Errors.Select(e => e.Description).ToList());
+
+        user.IsEnabled = request.IsEnabled;
+        var updateResult = await _userManager.UpdateAsync(user);
+        if (!updateResult.Succeeded)
+            return await Result<string>.FailAsync(updateResult.Errors.Select(e => e.Description).ToList());
+        
+        return await Result<string>.SuccessAsync("IsEnabled flag updated.");
+    }
+
+    [HttpPost]
     [Route("setRoles")]
     [Authorize(Roles = "Administrator")]
     public async Task<Result<string>> SetRoles(IdentityRequests.SetRolesRequest request)
     {
-        var user = await _userManager.FindByIdAsync(request.UserId);
+        var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null) return await Result<string>.FailAsync("User not found.");
 
         var existingRoles = await _userManager.GetRolesAsync(user);

@@ -4,8 +4,9 @@ public abstract class IdentityRequests
 {
     public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
-    public record SetRolesRequest(string UserId, List<string> Roles);
+    public record SetRolesRequest(string Email, List<string> Roles);
     public record RefreshRequest(string Email,  string RefreshToken);
+    public record SetEnabledRequest(string Email, bool IsEnabled);
 
     public class AuthResponse
     {
