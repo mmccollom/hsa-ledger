@@ -72,6 +72,7 @@ public class IdentityController : ApiControllerBase
 
     [HttpPost]
     [Route("refresh")]
+    [AllowAnonymous]
     public async Task<Result<AuthResponse>> Refresh(RefreshRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Username);
@@ -88,6 +89,7 @@ public class IdentityController : ApiControllerBase
 
     [HttpPost]
     [Route("changePassword")]
+    [Authorize]
     public async Task<Result<string>> ChangePassword(ChangePasswordRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
@@ -102,8 +104,7 @@ public class IdentityController : ApiControllerBase
 
     [HttpPost]
     [Route("setEnabled")]
-    //[Authorize(Roles = "Administrator")]
-    [Authorize]
+    [Authorize(Roles = "Administrator")]
     public async Task<Result<string>> SetRoles(SetEnabledRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
