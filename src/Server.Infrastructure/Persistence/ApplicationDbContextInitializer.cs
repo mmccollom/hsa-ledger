@@ -1,4 +1,4 @@
-﻿using HsaLedger.Domain.Entities;
+﻿using HsaLedger.Server.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
@@ -9,13 +9,15 @@ public class ApplicationDbContextInitializer
     private readonly ILogger<ApplicationDbContextInitializer> _logger;
     private readonly ApplicationDbContext _context;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly UserManager<User> _userManager;
 
     public ApplicationDbContextInitializer(ILogger<ApplicationDbContextInitializer> logger,
-        ApplicationDbContext context, RoleManager<IdentityRole> roleManager)
+        ApplicationDbContext context, RoleManager<IdentityRole> roleManager, UserManager<User> userManager)
     {
         _logger = logger;
         _context = context;
         _roleManager = roleManager;
+        _userManager = userManager;
     }
 
     public async Task SeedAsync()
@@ -33,7 +35,7 @@ public class ApplicationDbContextInitializer
 
     private async Task TrySeedAsync()
     {
-        string[] roles = ["ADMINISTRATOR", "OPERATIONS", "SERVICE"];
+        string[] roles = ["Administrator", "Operations", "Service"];
 
         foreach (var role in roles)
         {
@@ -42,7 +44,26 @@ public class ApplicationDbContextInitializer
                 await _roleManager.CreateAsync(new IdentityRole(role));
             }
         }
-        
-        await _context.SaveChangesAsync();
+
+        // default admin user
+        var user = await _userManager.FindByNameAsync("admin");
+        if (user == null)
+        {
+            user = new User
+            {
+                UserName = "admin"
+            };
+            var result = await _userManager.CreateAsync(user, "Admin123#!");
+            if (result.Succeeded)
+            {
+                user = await _userManager.FindByNameAsync("admin");
+                if (user != null)
+                {
+                    user.IsEnabled = true;
+                    await _userManager.UpdateAsync(user);
+                    await _userManager.AddToRolesAsync(user, ["Administrator"]);
+                }
+            }
+        }
     }
 }

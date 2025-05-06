@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using HsaLedger.Application.Requests;
+using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Server.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +20,7 @@ public class JwtTokenGenerator
         _config = config;
     }
 
-    public async Task<IdentityRequests.AuthResponse> GenerateTokenAsync(User user)
+    public async Task<AuthResponse> GenerateTokenAsync(User user)
     {
         var claims = new List<Claim>
         {
@@ -54,7 +54,7 @@ public class JwtTokenGenerator
         // Store the refresh token
         await _userManager.SetAuthenticationTokenAsync(user, "HsaLedger", "refresh_token", refreshToken);
 
-        return new IdentityRequests.AuthResponse
+        return new AuthResponse
         {
             AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
             ExpiresIn = (int)(expires - DateTime.UtcNow).TotalSeconds,

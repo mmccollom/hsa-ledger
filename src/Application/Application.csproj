@@ -32,7 +32,6 @@
     <ItemGroup>
       <Folder Include="Common\Validators\" />
       <Folder Include="Mediator\" />
-      <Folder Include="Responses\" />
     </ItemGroup>
 
 </Project>

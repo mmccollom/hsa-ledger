@@ -1,10 +1,10 @@
-using HsaLedger.Application.Requests;
+using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Server.Identity;
 using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HsaLedger.Server.Controllers;
@@ -13,17 +13,12 @@ public class IdentityController : ApiControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly LinkGenerator _linkGenerator;
     private readonly JwtTokenGenerator _jwtTokenGenerator;
 
-    public IdentityController(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        LinkGenerator linkGenerator, JwtTokenGenerator jwtTokenGenerator)
+    public IdentityController(UserManager<User> userManager, SignInManager<User> signInManager,JwtTokenGenerator jwtTokenGenerator)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _linkGenerator = linkGenerator;
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 
@@ -34,14 +29,16 @@ public class IdentityController : ApiControllerBase
     {
         var user = new User
         {
-            UserName = request.Email,
-            Email = request.Email
+            UserName = request.Username,
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
 
         if (!result.Succeeded)
             return await Result<string>.FailAsync(result.Errors.Select(e => e.Description).ToList());
+        
+        /*
+        // TODO: Send `confirmUrl` via email here...
 
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var confirmUrl = _linkGenerator.GetUriByAction(
@@ -51,67 +48,52 @@ public class IdentityController : ApiControllerBase
             values: new { userId = user.Id, token });
 
         Console.WriteLine(confirmUrl);
-        // TODO: Send `confirmUrl` via email here...
+        */
 
-        return await Result<string>.SuccessAsync("User registered. Confirmation email sent.");
-    }
-
-    [AllowAnonymous]
-    [HttpGet]
-    [Route("confirm")]
-    public async Task<Result<string>> ConfirmEmail(string userId, string token)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return await Result<string>.FailAsync("User not found.");
-
-        var result = await _userManager.ConfirmEmailAsync(user, token);
-        if (!result.Succeeded)
-            return await Result<string>.FailAsync(result.Errors.Select(e => e.Description).ToList());
-
-        return await Result<string>.SuccessAsync("Email confirmed.");
+        return await Result<string>.SuccessAsync("User registered.");
     }
 
     [AllowAnonymous]
     [HttpPost]
     [Route("login")]
-    public async Task<Result<IdentityRequests.AuthResponse>> Login(LoginRequest request)
+    public async Task<Result<AuthResponse>> Login(LoginRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Email);
+        var user = await _userManager.FindByNameAsync(request.Username);
         if (user is not { IsEnabled: true })
-            return await Result<IdentityRequests.AuthResponse>.FailAsync("Invalid login.");
+            return await Result<AuthResponse>.FailAsync("Invalid login.");
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
         if (!result.Succeeded)
-            return await Result<IdentityRequests.AuthResponse>.FailAsync("Invalid login.");
+            return await Result<AuthResponse>.FailAsync("Invalid login.");
 
         var tokenResult = await _jwtTokenGenerator.GenerateTokenAsync(user);
-        return await Result<IdentityRequests.AuthResponse>.SuccessAsync(tokenResult);
+        return await Result<AuthResponse>.SuccessAsync(tokenResult);
     }
 
     [HttpPost]
     [Route("refresh")]
-    public async Task<Result<IdentityRequests.AuthResponse>> Refresh(IdentityRequests.RefreshRequest request)
+    public async Task<Result<AuthResponse>> Refresh(RefreshRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.FindByEmailAsync(request.Username);
         if (user == null)
-            return await Result<IdentityRequests.AuthResponse>.FailAsync("User not found");
+            return await Result<AuthResponse>.FailAsync("User not found");
 
         var storedToken = await _jwtTokenGenerator.GetStoredRefreshTokenAsync(user);
         if (storedToken != request.RefreshToken)
-            return await Result<IdentityRequests.AuthResponse>.FailAsync("Invalid refresh token");
+            return await Result<AuthResponse>.FailAsync("Invalid refresh token");
 
         var tokenResponse = await _jwtTokenGenerator.GenerateTokenAsync(user);
-        return await Result<IdentityRequests.AuthResponse>.SuccessAsync(tokenResponse);
+        return await Result<AuthResponse>.SuccessAsync(tokenResponse);
     }
 
     [HttpPost]
     [Route("changePassword")]
-    public async Task<Result<string>> ChangePassword(IdentityRequests.ChangePasswordRequest request)
+    public async Task<Result<string>> ChangePassword(ChangePasswordRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return await Result<string>.FailAsync("User not found.");
 
-        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        var result = await _userManager.ChangePasswordAsync(user, request.Password, request.NewPassword);
         if (!result.Succeeded)
             return await Result<string>.FailAsync(result.Errors.Select(e => e.Description).ToList());
 
@@ -122,9 +104,9 @@ public class IdentityController : ApiControllerBase
     [Route("setEnabled")]
     //[Authorize(Roles = "Administrator")]
     [Authorize]
-    public async Task<Result<string>> SetRoles(IdentityRequests.SetEnabledRequest request)
+    public async Task<Result<string>> SetRoles(SetEnabledRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null) return await Result<string>.FailAsync("User not found.");
 
         var existingRoles = await _userManager.GetRolesAsync(user);
@@ -143,9 +125,9 @@ public class IdentityController : ApiControllerBase
     [HttpPost]
     [Route("setRoles")]
     [Authorize(Roles = "Administrator")]
-    public async Task<Result<string>> SetRoles(IdentityRequests.SetRolesRequest request)
+    public async Task<Result<string>> SetRoles(SetRolesRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null) return await Result<string>.FailAsync("User not found.");
 
         var existingRoles = await _userManager.GetRolesAsync(user);
