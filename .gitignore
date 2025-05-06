@@ -1,6 +1,8 @@
 # Manually added
 Mercury.sln.DotSettings.user
 .env
+**/Migrations/*
+*.user
 
 # Created by https://www.toptal.com/developers/gitignore/api/jetbrains+all,dotnetcore,linux,dotsettings
 # Edit at https://www.toptal.com/developers/gitignore?templates=jetbrains+all,dotnetcore,linux,dotsettings
