@@ -8,9 +8,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.14"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.14" PrivateAssets="all"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.15" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
+        <PackageReference Include="MudBlazor" Version="8.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Client.Infrastructure\Client.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>
