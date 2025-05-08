@@ -1,0 +1,55 @@
+@using FluentValidation
+@using HsaLedger.Client.Common
+@namespace HsaLedger.Client.Dialogs
+<MudDialog>
+    <DialogContent>
+        <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+            <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
+            <MudTextField Variant="Variant.Outlined"
+                          @bind-Value="_model.Name"
+                          For="@(() => _model.Name)"
+                          Immediate="true"
+                          Label="Name*"/>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Class="px-10" Variant="Variant.Filled" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Class="px-10" Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public bool ShowXrefType { get; set; } = true;
+
+    private MudForm? _form;
+    private readonly NewPersonModel _model = new();
+    private readonly NewPersonModelFluentValidator _validator = new();
+    
+    private void Cancel() => MudDialog.Cancel();
+    private async Task SubmitAsync()
+    {
+        await _form!.Validate();
+
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(_model));
+        }
+    }
+
+    
+    public class NewPersonModelFluentValidator : AbstractValidator<NewPersonModel>
+    {
+        public NewPersonModelFluentValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .Length(1,200);
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<NewPersonModel>.CreateWithOptions((NewPersonModel)model, x => x.IncludeProperties(propertyName)));
+            return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+}

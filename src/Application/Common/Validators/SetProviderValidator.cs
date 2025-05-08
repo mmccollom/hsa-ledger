@@ -21,7 +21,7 @@ public class SetProviderValidator : AbstractValidator<SetProviderCommand>
         RuleFor(x => x.ProviderRequest)
             .MustAsync(async (v, cancellationToken) =>
             {
-                return !await context.Providers.AnyAsync(x => x.Name == v.Name, cancellationToken);
+                return !await context.Providers.AnyAsync(x => x.Name == v.Name && x.ProviderId != v.ProviderId, cancellationToken);
             })
             .WithMessage("Provider already exists");
     }

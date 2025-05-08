@@ -1,4 +1,4 @@
-# Use the official .NET 8 SDK image to build and publish the app
+# Use the official .NET 8 SDK image to build and publish the app3
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
@@ -23,4 +23,4 @@ COPY wait-for-it.sh /wait-for-it.sh
 RUN chmod +x /wait-for-it.sh
 
 # change the ENTRYPOINT to use wait-for-it
-ENTRYPOINT ["/wait-for-it.sh", "postgres2:5433", "--", "dotnet", "Server.dll"]
+ENTRYPOINT ["/wait-for-it.sh", "postgres2:5432", "--", "dotnet", "Server.dll"]

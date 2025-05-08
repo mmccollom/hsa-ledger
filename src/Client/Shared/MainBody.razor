@@ -1,0 +1,65 @@
+@page "/MainBody"
+@using HsaLedger.Client.Common
+
+<MudAppBar Elevation="25">
+    <!-- TODO: Custom App Icon -->
+    <MudImage Src="/images/logo_monochrome.png" Alt="Mercury Logo" Width="50" Height="50" Class="rounded-lg"/>
+    <MudText Typo="Typo.h6" Class="ml-4">Mercury</MudText>
+    <MudToolBar Gutters="false">
+        <MudIconButton Icon="@Icons.Material.Outlined.Menu" Color="Color.Inherit" OnClick="@((e) => DrawerToggle())" Class="ml-3"/>
+    </MudToolBar>
+    <MudSpacer/>
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+        <MudTooltip Text="Toggle Dark Mode">
+            <MudIconButton Icon="@Icons.Material.Filled.Brightness4" Color="Color.Inherit" OnClick="@((e) => ToggleDarkMode())"/>
+        </MudTooltip>
+    </MudHidden>
+    <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+        <LanguageSelector/>
+        <MudMenu Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Dense="true" TransformOrigin="Origin.TopRight">
+            <div class="px-2">
+                <MudIconButton Icon="@Icons.Material.Filled.Brightness4" Color="Color.Inherit" OnClick="@((e) => ToggleDarkMode())"/>
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/blazorhero/CleanArchitecture" Target="_blank"/>
+            </div>
+            <MudText Typo="Typo.body2" Class="px-4 py-2"><b>Community</b></MudText>
+            <MudMenuItem Href="https://www.facebook.com/codewithmukesh" Target="_blank">Facebook Page</MudMenuItem>
+            <MudMenuItem Href="https://www.linkedin.com/in/iammukeshm/" Target="_blank">LinkedIn</MudMenuItem>
+            <MudText Typo="Typo.body2" Class="px-4 py-2"><b>Resources</b></MudText>
+            <MudMenuItem Href="https://mudblazor.com/getting-started/installation" Target="_blank">MudBlazor Documentation</MudMenuItem>
+            <MudMenuItem Href="https://codewithmukesh.com/blog/blazor-hero-quick-start-guide/" Target="_blank">Quick-Start Guide</MudMenuItem>
+        </MudMenu>
+    </MudHidden>
+    <MudMenu @ref="@_profileMenu" TransformOrigin="_rightToLeft ? Origin.TopRight : Origin.TopLeft" Dense="true" Class="mt-1 ml-4">
+        <ActivatorContent>
+            @if (string.IsNullOrEmpty(ImageDataUrl))
+            {
+                <MudAvatar Color="Color.Secondary">@FirstLetterOfName</MudAvatar>
+            }
+            else
+            {
+                <MudAvatar Style="height:50px; width:50px;">
+                    <MudImage Src="@ImageDataUrl"></MudImage>
+                </MudAvatar>
+            }
+        </ActivatorContent>
+        <ChildContent>
+            <UserCard Class="mt-n2"/>
+            <MudDivider Class="mb-2"/>
+            <MudList T="string">
+                <MudListItem Text="Account" Href="/account" Icon="@Icons.Material.Outlined.Person"/>
+                <MudListItem Text="Change Password" OnClick="InvokeChangePasswordModal" Icon="@Icons.Material.Outlined.Password"/>
+                <MudListItem Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick="Logout"/>
+            </MudList>
+            <MudDivider Class="mb-2"/>
+            <MudText Class="ml-2" Typo="Typo.caption">@($"Build: {BuildConstants.Build}")</MudText>
+        </ChildContent>
+    </MudMenu>
+</MudAppBar>
+<MudDrawer @bind-Open="_drawerOpen" Elevation="25" ClipMode="DrawerClipMode.Always">
+    <NavMenu />
+</MudDrawer>
+<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.False" Class="mt-4">
+        @ChildContent
+    </MudContainer>
+</MudMainContent>

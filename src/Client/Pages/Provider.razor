@@ -1,0 +1,188 @@
+@page "/provider"
+@using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Projections
+@using HsaLedger.Client.Common
+@using HsaLedger.Client.Dialogs
+
+<PageTitle>HSA | Type</PageTitle>
+<MudDataGrid T="ProviderModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
+             EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+             CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@DataGridTitle</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ShowAddDialog">Add</MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.ProviderId" Title="Id" Editable="false"/>
+        <PropertyColumn Property="x => x.Name"/>
+        <PropertyColumn Property="x => x.GetTransactionTypes()" Title="Transaction Types">
+            <EditTemplate>
+                <MudSelect T="TransactionTypeResponse" MultiSelection="true" ToStringFunc="_transactionTypeConverter"
+                           @bind-SelectedValues="context.Item.TransactionTypes"
+                           Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
+                    @foreach (var transactionType in _transactionTypes)
+                    {
+                        <MudSelectItem Value="@transactionType">@transactionType.Code</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.CreatedBy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.CreatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.LastUpdatedBy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.LastUpdatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync"/>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="() => Delete(context.Item)" Disabled="!context.Item.AllowDelete"/>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        @if (_dataState.IsLoading)
+        {
+            <MudText Typo="Typo.subtitle2">Loading...</MudText>
+        }
+        else if (_dataState.HasError)
+        {
+            <MudText Typo="Typo.subtitle2" Color="Color.Error">@_dataState.ErrorMessage</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">No records found.</MudText>
+        }
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    
+    private const string DataGridTitle = "Provider";
+    private DataLoadState<ProviderModel> _dataState = new();
+    private List<TransactionTypeResponse> _transactionTypes = [];
+    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            // Start loading
+            _dataState.IsLoading = true;
+            _dataState.HasError = false;
+
+            // Load your data
+            var providers = await GetData();
+            var transactionTypes = await GetTransactionTypes();
+            _transactionTypes = transactionTypes ?? [];
+            _dataState.Items = providers ?? [];
+        }
+        catch (Exception ex)
+        {
+            _dataState.HasError = true;
+            _dataState.ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            _dataState.IsLoading = false;
+        }
+    }
+
+    private async Task Delete(ProviderModel item)
+    {
+        var parameters = new DialogParameters
+        {
+            {nameof(Confirmation.ConfirmationType), "Delete"},
+            {nameof(Confirmation.TitleIcon), Icons.Material.Filled.Delete},
+            {nameof(Confirmation.ContentText), $"Are you sure you want to delete {item.Name}?"},
+            {nameof(Confirmation.ButtonText), "Yes"},
+            {nameof(Confirmation.Color), Color.Error}
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await _dialogService.ShowAsync<Confirmation>("", parameters, options);
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false, Data: bool isCompletedSuccessfully })
+        {
+            if (!isCompletedSuccessfully)
+            {
+                return;
+            }
+            
+            var result = await _providerManager.Delete(item.ProviderId);
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Deletion successful",
+                AlertHelper.DeleteFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task ShowAddDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        
+        var dialog = await _dialogService.ShowAsync<AddProvider>("", options);
+
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult == null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var data = dialogResult.Data;
+
+        if (data is NewProviderModel model)
+        {
+            var result = await _providerManager.Put(new AddProviderRequest
+            {
+                Name = model.Name,
+                TransactionTypeIds = model.TransactionTypes.Select(x => x.TransactionTypeId).ToList()
+            });
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Add successful",
+                AlertHelper.AddFallbackErrorMessage,
+                Load);
+        }
+    }
+    
+
+    private async Task CommittedItemChanges(ProviderModel item)
+    {
+        // set
+        var result = await _providerManager.Post(new SetProviderRequest
+        {
+            ProviderId = item.ProviderId,
+            Name = item.Name,
+            TransactionTypeIds = item.TransactionTypes.Select(x => x.TransactionTypeId).ToList()
+        });
+            
+        await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+            "Update successful",
+            AlertHelper.UpdateFallbackErrorMessage);
+    }
+
+    private async Task<List<ProviderModel>?> GetData()
+    {
+        var result = await _providerManager.Get();
+
+        var data = result.Data?.Select(ProviderModel.FromProviderResponse).OrderBy(x => x.ProviderId).ToList();
+        return data;
+    }
+
+    private async Task<List<TransactionTypeResponse>?> GetTransactionTypes()
+    {
+        var result = await _transactionTypeManager.Get();
+        var data = result.Data?.OrderBy(x => x.TransactionTypeId).ToList();
+        return data;
+    }
+}

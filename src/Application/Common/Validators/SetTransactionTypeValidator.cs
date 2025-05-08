@@ -24,7 +24,7 @@ public class SetTransactionTypeValidator : AbstractValidator<SetTransactionTypeC
         RuleFor(x => x.TransactionTypeRequest)
             .MustAsync(async (v, cancellationToken) =>
             {
-                return !await context.TransactionTypes.AnyAsync(x => x.Code == v.Code, cancellationToken);
+                return !await context.TransactionTypes.AnyAsync(x => x.Code == v.Code && x.TransactionTypeId != v.TransactionTypeId, cancellationToken);
             })
             .WithMessage("Transaction Type already exists");
     }

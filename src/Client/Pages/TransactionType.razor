@@ -1,0 +1,165 @@
+@page "/transactionType"
+@using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Projections
+@using HsaLedger.Client.Common
+@using HsaLedger.Client.Dialogs
+
+<PageTitle>HSA | Type</PageTitle>
+<MudDataGrid T="TransactionTypeResponse" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
+             EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+             CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@DataGridTitle</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ShowAddDialog">Add</MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.TransactionTypeId" Title="Id" Editable="false"/>
+        <PropertyColumn Property="x => x.Code"/>
+        <PropertyColumn Property="x => x.Description"/>
+        <PropertyColumn Property="x => x.CreatedBy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.CreatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.LastUpdatedBy" Editable="false"></PropertyColumn>
+        <PropertyColumn Property="x => x.LastUpdatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync"/>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="() => Delete(context.Item)" Disabled="!context.Item.AllowDelete"/>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        @if (_dataState.IsLoading)
+        {
+            <MudText Typo="Typo.subtitle2">Loading...</MudText>
+        }
+        else if (_dataState.HasError)
+        {
+            <MudText Typo="Typo.subtitle2" Color="Color.Error">@_dataState.ErrorMessage</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">No records found.</MudText>
+        }
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    
+    private const string DataGridTitle = "Transaction Type";
+    private DataLoadState<TransactionTypeResponse> _dataState = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            // Start loading
+            _dataState.IsLoading = true;
+            _dataState.HasError = false;
+
+            // Load your data
+            var transactionTypes = await GetData();
+            _dataState.Items = transactionTypes ?? [];            
+        }
+        catch (Exception ex)
+        {
+            _dataState.HasError = true;
+            _dataState.ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            _dataState.IsLoading = false;
+        }
+    }
+
+    private async Task Delete(TransactionTypeResponse transactionType)
+    {
+        var parameters = new DialogParameters
+        {
+            {nameof(Confirmation.ConfirmationType), "Delete"},
+            {nameof(Confirmation.TitleIcon), Icons.Material.Filled.Delete},
+            {nameof(Confirmation.ContentText), $"Are you sure you want to delete {transactionType.Code}?"},
+            {nameof(Confirmation.ButtonText), "Yes"},
+            {nameof(Confirmation.Color), Color.Error}
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await _dialogService.ShowAsync<Confirmation>("", parameters, options);
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false, Data: bool isCompletedSuccessfully })
+        {
+            if (!isCompletedSuccessfully)
+            {
+                return;
+            }
+            
+            var result = await _transactionTypeManager.Delete(transactionType.TransactionTypeId);
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Deletion successful",
+                AlertHelper.DeleteFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task ShowAddDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        
+        var dialog = await _dialogService.ShowAsync<AddType>("", options);
+
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult == null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var data = dialogResult.Data;
+
+        if (data is NewTypeModel model)
+        {
+            var result = await _transactionTypeManager.Put(new AddTransactionTypeRequest()
+            {
+                Code = model.Code,
+                Description = model.Description
+            });
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Add successful",
+                AlertHelper.AddFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task CommittedItemChanges(TransactionTypeResponse item)
+    {
+        // set
+        var result = await _transactionTypeManager.Post(new SetTransactionTypeRequest()
+        {
+            TransactionTypeId = item.TransactionTypeId,
+            Code = item.Code,
+            Description = item.Description
+        });
+            
+        await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+            "Update successful",
+            AlertHelper.UpdateFallbackErrorMessage);
+    }
+
+    private async Task<List<TransactionTypeResponse>?> GetData()
+    {
+        var result = await _transactionTypeManager.Get();
+
+        var data = result.Data?.OrderBy(x => x.TransactionTypeId).ToList();
+        return data;
+    }
+}

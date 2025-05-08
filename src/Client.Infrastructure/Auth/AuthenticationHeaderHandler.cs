@@ -9,7 +9,7 @@ public class AuthenticationHeaderHandler : DelegatingHandler
     private readonly ILocalStorageService _localStorage;
      
     public AuthenticationHeaderHandler(ILocalStorageService localStorage)
-        => this._localStorage = localStorage;
+        => _localStorage = localStorage;
      
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
@@ -17,7 +17,7 @@ public class AuthenticationHeaderHandler : DelegatingHandler
     {
         if (request.Headers.Authorization?.Scheme != "Bearer")
         {
-            var savedToken = await this._localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
+            var savedToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
      
             if (!string.IsNullOrWhiteSpace(savedToken))
             {

@@ -1,0 +1,33 @@
+﻿<UserCard/>
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">Dashboard</MudNavLink>
+    <MudNavLink Href="/data" Icon="@Icons.Material.Outlined.VerifiedUser">Data</MudNavLink>
+    <MudDivider />
+    <MudNavLink Href="/person" Icon="@Icons.Material.Outlined.Person">Person</MudNavLink>
+    <MudNavLink Href="/provider" Icon="@Icons.Material.Outlined.LocalHospital">Provider</MudNavLink>
+    <MudNavLink Href="/transactionType" Icon="@Icons.Material.Outlined.TypeSpecimen">Transaction Type</MudNavLink>
+</MudNavMenu>
+
+@code {
+
+
+    /*
+    private NavSelectedCustomerModel? _activeCustomer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _activeCustomer = await _localStorage.GetItemAsync<NavSelectedCustomerModel?>(StorageConstants.Local.ActiveCustomer);
+
+        _localStorage.Changed += (_, args) =>
+        {
+            switch (args.Key)
+            {
+                case StorageConstants.Local.ActiveCustomer when args.NewValue is NavSelectedCustomerModel newCustomer:
+                    //_activeCustomer = newCustomer;
+                    StateHasChanged();
+                    break;
+            }
+        };
+    }
+    */
+}

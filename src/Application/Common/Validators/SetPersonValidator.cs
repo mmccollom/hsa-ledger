@@ -21,7 +21,7 @@ public class SetPersonValidator : AbstractValidator<SetPersonCommand>
         RuleFor(x => x.PersonRequest)
             .MustAsync(async (v, cancellationToken) =>
             {
-                return !await context.Persons.AnyAsync(x => x.Name == v.Name, cancellationToken);
+                return !await context.Persons.AnyAsync(x => x.Name == v.Name && x.PersonId != v.PersonId, cancellationToken);
             })
             .WithMessage("Person already exists");
     }

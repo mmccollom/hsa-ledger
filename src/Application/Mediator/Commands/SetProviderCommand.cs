@@ -29,7 +29,12 @@ public class SetProviderCommandHandler : IRequestHandler<SetProviderCommand, Res
     {
         var provider = await _context.Providers.FirstAsync(x => x.ProviderId == request.ProviderRequest.ProviderId, cancellationToken);
 
+        var transactionTypes = from tt in _context.TransactionTypes
+            join p in request.ProviderRequest.TransactionTypeIds on tt.TransactionTypeId equals p
+            select tt;
+        
         provider.Name = request.ProviderRequest.Name;
+        provider.TransactionTypes = transactionTypes.ToList();
         
         var changes = await _context.SaveChangesAsync(cancellationToken);
         return await Result<int>.SuccessAsync(changes, "Provider Updated");

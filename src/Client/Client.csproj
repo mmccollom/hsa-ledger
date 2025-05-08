@@ -13,11 +13,16 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.14" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.15" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.4" />
-        <PackageReference Include="MudBlazor" Version="8.6.0" />
+        <PackageReference Include="MudBlazor" Version="8.5.1" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Client.Infrastructure\Client.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Layout\MainLayout.razor" />
+      <_ContentIncludedByDefault Remove="Layout\NavMenu.razor" />
     </ItemGroup>
 
 </Project>

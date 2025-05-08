@@ -14,6 +14,8 @@ public interface IAuthenticationManager : IManager
     Task<IResult> Logout();
 
     Task<string> RefreshToken();
+    
+    Task<string?> GetValidToken();
 
     Task<string> TryRefreshToken();
 

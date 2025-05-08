@@ -1,0 +1,57 @@
+﻿@using HsaLedger.Client.Common
+@using HsaLedger.Shared.Common.Constants.Storage
+@namespace HsaLedger.Client.Shared
+<MudCard Elevation="0" Square="true" Class="@Class">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            @if (string.IsNullOrEmpty(ImageDataUrl))
+            {
+                <MudAvatar Color="Color.Secondary">@FirstLetterOfName</MudAvatar>
+            }
+            else
+            {
+                <MudAvatar Style="height:50px; width:50px;">
+                    <MudImage Src="@ImageDataUrl"></MudImage>
+                </MudAvatar>
+            }
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.caption">@Username</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+</MudCard>
+
+@code{
+    [Parameter] public string? Class { get; set; }
+    private string? Username { get; set; }
+    private char FirstLetterOfName { get; set; }
+
+    [Parameter]
+    public string? ImageDataUrl { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var state = await _stateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        Username = user.Username();
+        if (Username?.Length > 0)
+        {
+            FirstLetterOfName = Username[0];
+        }
+        var imageResponse = await _localStorage.GetItemAsync<string>(StorageConstants.Local.UserImageUrl);
+        if (!string.IsNullOrEmpty(imageResponse))
+        {
+            ImageDataUrl = imageResponse;
+        }
+        StateHasChanged();
+    }
+}

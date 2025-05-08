@@ -75,9 +75,9 @@ public class IdentityController : ApiControllerBase
     [AllowAnonymous]
     public async Task<Result<AuthResponse>> Refresh(RefreshRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Username);
+        var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null)
-            return await Result<AuthResponse>.FailAsync("User not found");
+            return await Result<AuthResponse>.FailAsync("User not found.");
 
         var storedToken = await _jwtTokenGenerator.GetStoredRefreshTokenAsync(user);
         if (storedToken != request.RefreshToken)

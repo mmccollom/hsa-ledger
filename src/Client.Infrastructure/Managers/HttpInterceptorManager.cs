@@ -25,24 +25,30 @@ public class HttpInterceptorManager : IHttpInterceptorManager
         {
             var absPath = e.Request?.RequestUri?.AbsolutePath;
 
-            if (absPath == null) return;
-            
-            if (!absPath.Contains("token") && !absPath.Contains("accounts"))
+            if (absPath == null || absPath.ToLower().EndsWith("login") || absPath.ToLower().EndsWith("refresh"))
             {
-                try
+                return;
+            }
+            
+            var currentUser = await _authenticationManager.CurrentUser();
+            if (!currentUser.Identity?.IsAuthenticated ?? false)
+            {
+                return;
+            }
+            try
+            {
+                var token = await _authenticationManager.GetValidToken() ?? await _authenticationManager.RefreshToken();
+
+                if (!string.IsNullOrEmpty(token))
                 {
-                    var token = await _authenticationManager.TryRefreshToken();
-                    if (!string.IsNullOrEmpty(token))
-                    {
-                        e.Request!.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    }
+                    e.Request!.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    await _authenticationManager.Logout();
-                    _navigationManager.NavigateTo("/");
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                await _authenticationManager.Logout();
+                _navigationManager.NavigateTo("/");
             }
         }
 

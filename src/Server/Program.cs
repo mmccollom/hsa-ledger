@@ -3,9 +3,18 @@ using HsaLedger.Server;
 using HsaLedger.Server.Common.Extensions;
 using HsaLedger.Server.Infrastructure;
 using HsaLedger.Server.Infrastructure.Persistence;
+using HsaLedger.Server.Middleware;
 
+
+const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins,
+        policy => { policy.WithOrigins("*").AllowAnyMethod().AllowAnyHeader(); });
+});
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -27,8 +36,11 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var initializer = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitializer>();
     await initializer.SeedAsync();
+
 }
 
+app.UseMiddleware<ValidationExceptionMiddleware>();
+app.UseCors(myAllowSpecificOrigins);
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
