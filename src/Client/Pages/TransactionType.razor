@@ -5,7 +5,7 @@
 @using HsaLedger.Client.Dialogs
 
 <PageTitle>HSA | Type</PageTitle>
-<MudDataGrid T="TransactionTypeResponse" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
+<MudDataGrid T="TransactionTypeModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
              CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
     <ToolBarContent>
@@ -18,6 +18,18 @@
         <PropertyColumn Property="x => x.TransactionTypeId" Title="Id" Editable="false"/>
         <PropertyColumn Property="x => x.Code"/>
         <PropertyColumn Property="x => x.Description"/>
+        <PropertyColumn Property="x => x.GetTransactionTypes()" Title="Transaction Types">
+            <EditTemplate>
+                <MudSelect T="ProviderResponse" MultiSelection="true" ToStringFunc="_providerConverter"
+                           @bind-SelectedValues="context.Item.Providers"
+                           Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
+                    @foreach (var provider in _providers)
+                    {
+                        <MudSelectItem Value="@provider">@provider.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
         <PropertyColumn Property="x => x.CreatedBy" Editable="false"></PropertyColumn>
         <PropertyColumn Property="x => x.CreatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
         <PropertyColumn Property="x => x.LastUpdatedBy" Editable="false"></PropertyColumn>
@@ -48,7 +60,9 @@
 @code {
     
     private const string DataGridTitle = "Transaction Type";
-    private DataLoadState<TransactionTypeResponse> _dataState = new();
+    private DataLoadState<TransactionTypeModel> _dataState = new();
+    private List<ProviderResponse> _providers = new();
+    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
     
     protected override async Task OnInitializedAsync()
     {
@@ -65,6 +79,8 @@
 
             // Load your data
             var transactionTypes = await GetData();
+            var providers = await GetProviders();
+            _providers = providers ?? [];
             _dataState.Items = transactionTypes ?? [];            
         }
         catch (Exception ex)
@@ -78,7 +94,7 @@
         }
     }
 
-    private async Task Delete(TransactionTypeResponse transactionType)
+    private async Task Delete(TransactionTypeModel transactionType)
     {
         var parameters = new DialogParameters
         {
@@ -114,7 +130,7 @@
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
         
-        var dialog = await _dialogService.ShowAsync<AddType>("", options);
+        var dialog = await _dialogService.ShowAsync<AddTransactionType>("", options);
 
         var dialogResult = await dialog.Result;
 
@@ -125,9 +141,9 @@
 
         var data = dialogResult.Data;
 
-        if (data is NewTypeModel model)
+        if (data is NewTransactionTypeModel model)
         {
-            var result = await _transactionTypeManager.Put(new AddTransactionTypeRequest()
+            var result = await _transactionTypeManager.Put(new AddTransactionTypeRequest
             {
                 Code = model.Code,
                 Description = model.Description
@@ -140,7 +156,7 @@
         }
     }
 
-    private async Task CommittedItemChanges(TransactionTypeResponse item)
+    private async Task CommittedItemChanges(TransactionTypeModel item)
     {
         // set
         var result = await _transactionTypeManager.Post(new SetTransactionTypeRequest()
@@ -155,11 +171,22 @@
             AlertHelper.UpdateFallbackErrorMessage);
     }
 
-    private async Task<List<TransactionTypeResponse>?> GetData()
+    private async Task<List<TransactionTypeModel>?> GetData()
     {
         var result = await _transactionTypeManager.Get();
 
-        var data = result.Data?.OrderBy(x => x.TransactionTypeId).ToList();
+        var data = result.Data?
+            .Select(TransactionTypeModel.FromTransactionTypeResponse)
+            .OrderBy(x => x.TransactionTypeId).ToList();
+        
+        return data;
+    }
+
+    private async Task<List<ProviderResponse>?> GetProviders()
+    {
+        var result = await _providerManager.Get();
+
+        var data = result.Data?.OrderBy(x => x.ProviderId).ToList();
         return data;
     }
 }

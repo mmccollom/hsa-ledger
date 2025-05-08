@@ -1,5 +1,4 @@
 @using FluentValidation
-@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
@@ -11,17 +10,6 @@
                           For="@(() => _model.Name)"
                           Immediate="true"
                           Label="Name*"/>
-            <MudSelect T="TransactionTypeResponse" MultiSelection="true" ToStringFunc="_transactionTypeConverter"
-                       @bind-SelectedValues="_model.TransactionTypes"
-                       Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
-                @if (TransactionTypes != null)
-                {
-                    foreach (var transactionType in TransactionTypes)
-                    {
-                        <MudSelectItem Value="@transactionType">@transactionType.Code</MudSelectItem>
-                    }
-                }
-            </MudSelect>
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -31,12 +19,10 @@
 </MudDialog>
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public IEnumerable<TransactionTypeResponse>? TransactionTypes { get; set; }
 
     private MudForm? _form;
     private readonly NewProviderModel _model = new();
     private readonly NewProviderModelFluentValidator _validator = new();
-    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
     
     private void Cancel() => MudDialog.Cancel();
     private async Task SubmitAsync()

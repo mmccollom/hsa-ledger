@@ -17,18 +17,6 @@
     <Columns>
         <PropertyColumn Property="x => x.ProviderId" Title="Id" Editable="false"/>
         <PropertyColumn Property="x => x.Name"/>
-        <PropertyColumn Property="x => x.GetTransactionTypes()" Title="Transaction Types">
-            <EditTemplate>
-                <MudSelect T="TransactionTypeResponse" MultiSelection="true" ToStringFunc="_transactionTypeConverter"
-                           @bind-SelectedValues="context.Item.TransactionTypes"
-                           Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
-                    @foreach (var transactionType in _transactionTypes)
-                    {
-                        <MudSelectItem Value="@transactionType">@transactionType.Code</MudSelectItem>
-                    }
-                </MudSelect>
-            </EditTemplate>
-        </PropertyColumn>
         <PropertyColumn Property="x => x.CreatedBy" Editable="false"></PropertyColumn>
         <PropertyColumn Property="x => x.CreatedTime" Format="M/d/yyyy" Editable="false"></PropertyColumn>
         <PropertyColumn Property="x => x.LastUpdatedBy" Editable="false"></PropertyColumn>
@@ -60,8 +48,6 @@
     
     private const string DataGridTitle = "Provider";
     private DataLoadState<ProviderModel> _dataState = new();
-    private List<TransactionTypeResponse> _transactionTypes = [];
-    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
     
     protected override async Task OnInitializedAsync()
     {
@@ -78,8 +64,6 @@
 
             // Load your data
             var providers = await GetData();
-            var transactionTypes = await GetTransactionTypes();
-            _transactionTypes = transactionTypes ?? [];
             _dataState.Items = providers ?? [];
         }
         catch (Exception ex)
@@ -144,8 +128,7 @@
         {
             var result = await _providerManager.Put(new AddProviderRequest
             {
-                Name = model.Name,
-                TransactionTypeIds = model.TransactionTypes.Select(x => x.TransactionTypeId).ToList()
+                Name = model.Name
             });
             
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
@@ -162,8 +145,7 @@
         var result = await _providerManager.Post(new SetProviderRequest
         {
             ProviderId = item.ProviderId,
-            Name = item.Name,
-            TransactionTypeIds = item.TransactionTypes.Select(x => x.TransactionTypeId).ToList()
+            Name = item.Name
         });
             
         await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
@@ -176,13 +158,6 @@
         var result = await _providerManager.Get();
 
         var data = result.Data?.Select(ProviderModel.FromProviderResponse).OrderBy(x => x.ProviderId).ToList();
-        return data;
-    }
-
-    private async Task<List<TransactionTypeResponse>?> GetTransactionTypes()
-    {
-        var result = await _transactionTypeManager.Get();
-        var data = result.Data?.OrderBy(x => x.TransactionTypeId).ToList();
         return data;
     }
 }

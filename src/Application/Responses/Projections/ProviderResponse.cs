@@ -6,7 +6,6 @@ public class ProviderResponse
 {
     public int ProviderId { get; set; }
     public required string Name { get; set; }
-    public required List<TransactionTypeResponse> TransactionTypes { get; set; }
     public bool AllowDelete { get; set; }
     public DateTime CreatedTime { get; set; }
     public string? CreatedBy { get; set; }
@@ -22,7 +21,6 @@ public class ProviderResponse
             {
                 ProviderId = x.ProviderId,
                 Name = x.Name,
-                TransactionTypes = x.TransactionTypes.AsQueryable().Select(TransactionTypeResponse.Projection).ToList(),
                 AllowDelete = x.Transactions.Count == 0 && x.TransactionTypes.Count == 0,
                 CreatedTime = x.CreatedTime,
                 CreatedBy = x.CreatedBy,

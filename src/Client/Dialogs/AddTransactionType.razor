@@ -1,4 +1,5 @@
 @using FluentValidation
+@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
@@ -14,6 +15,17 @@
                           @bind-Value="_model.Description"
                           For="@(() => _model.Description)"
                           Label="Description*"/>
+            <MudSelect T="ProviderResponse" MultiSelection="true" ToStringFunc="_providerConverter"
+                       @bind-SelectedValues="_model.Providers"
+                       Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
+                @if (Providers != null)
+                {
+                    @foreach (var provider in Providers)
+                    {
+                        <MudSelectItem Value="@provider">@provider.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -23,11 +35,12 @@
 </MudDialog>
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public bool ShowXrefType { get; set; } = true;
+    [Parameter] public IEnumerable<ProviderResponse>? Providers { get; set; }
 
     private MudForm? _form;
-    private readonly NewTypeModel _model = new();
-    private readonly NewTypeModelFluentValidator _validator = new();
+    private readonly NewTransactionTypeModel _model = new();
+    private readonly NewTransactionTypeModelFluentValidator _validator = new();
+    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
     
     private void Cancel() => MudDialog.Cancel();
     private async Task SubmitAsync()
@@ -41,9 +54,9 @@
     }
 
     
-    public class NewTypeModelFluentValidator : AbstractValidator<NewTypeModel>
+    public class NewTransactionTypeModelFluentValidator : AbstractValidator<NewTransactionTypeModel>
     {
-        public NewTypeModelFluentValidator()
+        public NewTransactionTypeModelFluentValidator()
         {
             RuleFor(x => x.Code)
                 .NotEmpty()
@@ -54,7 +67,7 @@
 
         public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
         {
-            var result = await ValidateAsync(ValidationContext<NewTypeModel>.CreateWithOptions((NewTypeModel)model, x => x.IncludeProperties(propertyName)));
+            var result = await ValidateAsync(ValidationContext<NewTransactionTypeModel>.CreateWithOptions((NewTransactionTypeModel)model, x => x.IncludeProperties(propertyName)));
             return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
         };
     }
