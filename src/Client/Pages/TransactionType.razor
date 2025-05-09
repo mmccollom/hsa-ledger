@@ -1,6 +1,5 @@
 @page "/transactionType"
 @using HsaLedger.Application.Requests
-@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Dialogs
 
@@ -18,14 +17,14 @@
         <PropertyColumn Property="x => x.TransactionTypeId" Title="Id" Editable="false"/>
         <PropertyColumn Property="x => x.Code"/>
         <PropertyColumn Property="x => x.Description"/>
-        <PropertyColumn Property="x => x.GetTransactionTypes()" Title="Transaction Types">
+        <PropertyColumn Property="x => x.GetProviders()" Title="Providers">
             <EditTemplate>
-                <MudSelect T="ProviderResponse" MultiSelection="true" ToStringFunc="_providerConverter"
+                <MudSelect T="ProviderModel" MultiSelection="true" ToStringFunc="_providerConverter"
                            @bind-SelectedValues="context.Item.Providers"
                            Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
                     @foreach (var provider in _providers)
                     {
-                        <MudSelectItem Value="@provider">@provider.Name</MudSelectItem>
+                        <MudSelectItem T="ProviderModel" Value="@provider">@provider.Name</MudSelectItem>
                     }
                 </MudSelect>
             </EditTemplate>
@@ -61,8 +60,8 @@
     
     private const string DataGridTitle = "Transaction Type";
     private DataLoadState<TransactionTypeModel> _dataState = new();
-    private List<ProviderResponse> _providers = new();
-    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
+    private List<ProviderModel> _providers = new();
+    private readonly Func<ProviderModel?,string> _providerConverter = a => a?.Name ?? "";
     
     protected override async Task OnInitializedAsync()
     {
@@ -146,7 +145,8 @@
             var result = await _transactionTypeManager.Put(new AddTransactionTypeRequest
             {
                 Code = model.Code,
-                Description = model.Description
+                Description = model.Description,
+                ProviderIds = model.Providers.Select(x => x.ProviderId)
             });
             
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
@@ -163,7 +163,8 @@
         {
             TransactionTypeId = item.TransactionTypeId,
             Code = item.Code,
-            Description = item.Description
+            Description = item.Description,
+            ProviderIds = item.Providers.Select(x => x.ProviderId)
         });
             
         await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
@@ -182,11 +183,13 @@
         return data;
     }
 
-    private async Task<List<ProviderResponse>?> GetProviders()
+    private async Task<List<ProviderModel>?> GetProviders()
     {
         var result = await _providerManager.Get();
 
-        var data = result.Data?.OrderBy(x => x.ProviderId).ToList();
+        var data = result.Data?
+            .Select(ProviderModel.FromProviderResponse)
+            .OrderBy(x => x.ProviderId).ToList();
         return data;
     }
 }
