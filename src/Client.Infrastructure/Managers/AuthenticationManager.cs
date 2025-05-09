@@ -76,7 +76,7 @@ public class AuthenticationManager : IAuthenticationManager
 
             await ((ClientStateProvider)_authenticationStateProvider).StateChangedAsync();
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             return await Result.SuccessAsync();
         }
@@ -142,7 +142,7 @@ public class AuthenticationManager : IAuthenticationManager
         await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
         await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);
         
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return token!;
     }
 
