@@ -42,7 +42,7 @@
         var state = await _stateProvider.GetAuthenticationStateAsync();
         var user = state.User;
 
-        Username = user.Username();
+        Username = user.Claims.FirstOrDefault(x => x.Type == "name")?.Value;
         if (Username?.Length > 0)
         {
             FirstLetterOfName = Username[0];
