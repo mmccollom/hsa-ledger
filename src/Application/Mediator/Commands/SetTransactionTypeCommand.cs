@@ -27,10 +27,22 @@ public class SetTransactionTypeCommandHandler : IRequestHandler<SetTransactionTy
 
     public async Task<Result<int>> Handle(SetTransactionTypeCommand request, CancellationToken cancellationToken)
     {
-        var transactionType = await _context.TransactionTypes.FirstAsync(x => x.TransactionTypeId == request.TransactionTypeRequest.TransactionTypeId, cancellationToken);
+        var transactionType = await _context.TransactionTypes
+            .Include(x => x.Providers)
+            .FirstAsync(x => x.TransactionTypeId == request.TransactionTypeRequest.TransactionTypeId, cancellationToken);
+        var providers = from p in _context.Providers
+            join tp in request.TransactionTypeRequest.ProviderIds on p.ProviderId equals tp
+            select p;
 
         transactionType.Code = request.TransactionTypeRequest.Code;
         transactionType.Description = request.TransactionTypeRequest.Description;
+
+        transactionType.Providers.Clear();
+
+        foreach (var provider in providers)
+        {
+            transactionType.Providers.Add(provider);
+        }
         
         var changes = await _context.SaveChangesAsync(cancellationToken);
         return await Result<int>.SuccessAsync(changes, "Transaction Type Updated");

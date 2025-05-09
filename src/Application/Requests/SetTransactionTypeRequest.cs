@@ -5,4 +5,5 @@ public class SetTransactionTypeRequest
     public int TransactionTypeId { get; set; }
     public required string Code { get; set; }
     public required string Description { get; set; }
+    public required IEnumerable<int> ProviderIds { get; set; }
 }

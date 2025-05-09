@@ -26,10 +26,14 @@ public class AddTransactionTypeCommandHandler : IRequestHandler<AddTransactionTy
 
     public async Task<Result<int>> Handle(AddTransactionTypeCommand request, CancellationToken cancellationToken)
     {
+        var providers = from p in _context.Providers
+            join tp in request.TransactionTypeRequest.ProviderIds on p.ProviderId equals tp
+            select p;
         var transactionType = new Domain.Entities.TransactionType
         {
             Code = request.TransactionTypeRequest.Code,
             Description = request.TransactionTypeRequest.Description,
+            Providers = providers.ToList()
         };
 
         var entity = await _context.TransactionTypes.AddAsync(transactionType, cancellationToken);
