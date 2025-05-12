@@ -21,7 +21,8 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
 
     public string GetProviders()
     {
-        return string.Join(",", this.Providers.Select(t => t.Name));
+        var providers = string.Join(",", Providers.Select(t => t.Name));
+        return providers.Length > 100 ? string.Concat(providers.AsSpan(0, 100), "...") : providers;
     }
 
     public static TransactionTypeModel FromTransactionTypeResponse(TransactionTypeResponse response)

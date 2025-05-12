@@ -17,7 +17,7 @@
                           Label="Description*"/>
             <MudSelect T="ProviderResponse" MultiSelection="true" ToStringFunc="_providerConverter"
                        @bind-SelectedValues="_model.Providers"
-                       Margin="@Margin.Dense" Label="Transaction Type" Variant="Variant.Outlined">
+                       Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
                 @if (Providers != null)
                 {
                     @foreach (var provider in Providers)
@@ -35,7 +35,7 @@
 </MudDialog>
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public IEnumerable<ProviderResponse>? Providers { get; set; }
+    [Parameter] public IEnumerable<ProviderModel>? Providers { get; set; }
 
     private MudForm? _form;
     private readonly NewTransactionTypeModel _model = new();

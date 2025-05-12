@@ -129,7 +129,12 @@
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
         
-        var dialog = await _dialogService.ShowAsync<AddTransactionType>("", options);
+        var parameters = new DialogParameters
+        {
+            {nameof(AddTransactionType.Providers), _providers},
+        };
+        
+        var dialog = await _dialogService.ShowAsync<AddTransactionType>("", parameters, options);
 
         var dialogResult = await dialog.Result;
 

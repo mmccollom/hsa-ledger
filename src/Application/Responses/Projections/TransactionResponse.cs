@@ -11,7 +11,7 @@ public class TransactionResponse
     public virtual ProviderResponse Provider { get; set; } = null!;
     public int? PersonId { get; set; }
     public virtual PersonResponse? Person { get; set; }
-    public DateTime Date { get; set; }
+    public DateTime? Date { get; set; }
     public decimal Amount { get; set; }
     public bool IsPaid { get; set; }
     public bool IsHsaWithdrawn { get; set; }

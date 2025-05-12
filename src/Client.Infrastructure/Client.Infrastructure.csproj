@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+      <PackageReference Include="ClosedXML" Version="0.104.2" />
       <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.15" />
       <PackageReference Include="MudBlazor" Version="8.5.1" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

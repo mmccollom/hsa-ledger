@@ -1,8 +1,10 @@
 using System.Globalization;
 using Blazored.LocalStorage;
+using HsaLedger.Application.Common.Interfaces;
 using HsaLedger.Client.Infrastructure.Auth;
 using HsaLedger.Client.Infrastructure.Managers;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
+using HsaLedger.Client.Infrastructure.Services;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -37,6 +39,10 @@ internal static class ConfigureServices
         }).AddHttpMessageHandler<AuthenticationHeaderHandler>();
         
         services.AddHttpClientInterceptor();
+
+        // Add client services
+        services.AddScoped<IClientExcelService, ClientExcelService>();
+        
         return services;
     }
 

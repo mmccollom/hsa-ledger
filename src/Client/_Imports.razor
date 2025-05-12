@@ -13,6 +13,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using Blazored.FluentValidation
+@using HsaLedger.Application.Common.Interfaces
 @using HsaLedger.Client.Infrastructure.Auth
 @using HsaLedger.Client.Infrastructure.Managers.Interfaces
 
@@ -24,6 +25,8 @@
 @inject IProviderManager _providerManager;
 @inject ITransactionManager _transactionManager;
 @inject ITransactionTypeManager _transactionTypeManager;
+
+@inject IClientExcelService _clientExcelService;
 
 @inject IClientPreferenceManager _clientPreferenceManager;
 

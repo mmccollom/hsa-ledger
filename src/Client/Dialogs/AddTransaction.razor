@@ -1,0 +1,98 @@
+@using FluentValidation
+@using HsaLedger.Application.Responses.Projections
+@using HsaLedger.Client.Common
+@namespace HsaLedger.Client.Dialogs
+<MudDialog>
+    <DialogContent>
+        <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+            <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
+            <MudSelect T="TransactionTypeResponse" ToStringFunc="_transactionTypeConverter"
+                       @bind-Value="_model.TransactionType"
+                       Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
+                @if (TransactionTypes != null)
+                {
+                    @foreach (var transactionType in TransactionTypes)
+                    {
+                        <MudSelectItem Value="@transactionType">@transactionType.Code</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <MudSelect T="ProviderResponse" ToStringFunc="_providerConverter" @bind-Value="_model.Provider"
+                       Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
+                @if (Providers != null)
+                {
+                    @foreach (var provider in Providers)
+                    {
+                        <MudSelectItem Value="@provider">@provider.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <MudSelect T="PersonResponse" ToStringFunc="_personConverter" @bind-Value="_model.Person"
+                       Margin="@Margin.Dense" Label="Person" Variant="Variant.Outlined">
+                <MudSelectItem T="PersonResponse" />
+                @if (Persons != null)
+                {
+                    @foreach (var person in Persons)
+                    {
+                        <MudSelectItem Value="@person">@person.Name</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+            <MudDatePicker @bind-Date="_model.Date" Label="Date*" For="@(() => _model.Date)" Variant="Variant.Outlined" />
+            <MudNumericField @bind-Value="_model.Amount" Label="Amount" Variant="Variant.Outlined" Step="1M" Format="C2" />
+            <MudCheckBox @bind-Value="_model.IsPaid" Label="Paid" Color="Color.Primary" />
+            <MudCheckBox @bind-Value="_model.IsHsaWithdrawn" Label="HSA Withdrawn" Color="Color.Primary" />
+            <MudCheckBox @bind-Value="_model.IsAudited" Label="Audited" Color="Color.Primary" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Class="px-10" Variant="Variant.Filled" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Class="px-10" Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public IEnumerable<ProviderResponse>? Providers { get; set; }
+    [Parameter] public IEnumerable<TransactionTypeResponse>? TransactionTypes { get; set; }
+    [Parameter] public IEnumerable<PersonResponse>? Persons { get; set; }
+
+    private MudForm? _form;
+    private readonly NewTransactionModel _model = new();
+    private readonly NewTransactionModelFluentValidator _validator = new();
+    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
+    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
+    private readonly Func<PersonResponse?,string> _personConverter = a => a?.Name ?? "";
+    
+    private void Cancel() => MudDialog.Cancel();
+    private async Task SubmitAsync()
+    {
+        await _form!.Validate();
+
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(_model));
+        }
+    }
+
+    
+    public class NewTransactionModelFluentValidator : AbstractValidator<NewTransactionModel>
+    {
+        public NewTransactionModelFluentValidator()
+        {
+            RuleFor(x => x.TransactionType)
+                .NotNull();
+            RuleFor(x => x.Provider)
+                .NotNull();
+            RuleFor(x => x.Amount)
+                .NotEmpty();
+            RuleFor(x => x.Date)
+                .NotEmpty();
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<NewTransactionModel>.CreateWithOptions((NewTransactionModel)model, x => x.IncludeProperties(propertyName)));
+            return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+}

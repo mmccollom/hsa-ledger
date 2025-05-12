@@ -1,6 +1,358 @@
 @page "/data"
-<h3>Data</h3>
+@using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Projections
+@using HsaLedger.Client.Common
+@using HsaLedger.Client.Dialogs
+
+<PageTitle>HSA | Type</PageTitle>
+<MudDataGrid T="TransactionResponse" @ref="_dataGrid" Items="@_dataState.Items" Loading="@_dataState.IsLoading"
+             SortMode="SortMode.Multiple" Filterable="true" Dense="true"
+             EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+             CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@DataGridTitle</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ShowAddDialog">Add</MudButton>
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Download" Color="Color.Success"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ExportFiltered">Export</MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.TransactionId" Title="ID" Editable="false"/>
+        <PropertyColumn Property="x => x.TransactionType.Code" Title="Type">
+            <EditTemplate>
+                <MudSelect T="TransactionTypeResponse" ToStringFunc="_transactionTypeConverter"
+                           @bind-Value="context.Item.TransactionType" Margin="@Margin.Dense" Label="Type"
+                           Variant="Variant.Outlined">
+                    @foreach (var transactionType in _transactionTypes)
+                    {
+                        <MudSelectItem T="TransactionTypeResponse" Value="@transactionType">@transactionType.Code</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.Provider.Name" Title="Provider">
+            <EditTemplate>
+                <MudSelect T="ProviderResponse" ToStringFunc="_providerConverter" @bind-Value="context.Item.Provider" 
+                           Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
+                    @foreach (var provider in _providers)
+                    {
+                        <MudSelectItem T="ProviderResponse" Value="@provider">@provider.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        @* ReSharper disable once CSharpWarnings::CS8602 *@
+        <PropertyColumn Property="x => x.Person.Name" Title="Person">
+            <EditTemplate>
+                <MudSelect T="PersonResponse" ToStringFunc="_personConverter" @bind-Value="context.Item.Person" 
+                           Margin="@Margin.Dense" Label="Person" Variant="Variant.Outlined">
+                    <MudSelectItem T="PersonResponse"></MudSelectItem>
+                    @foreach (var person in _persons)
+                    {
+                        <MudSelectItem T="PersonResponse" Value="@person">@person.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.Date" Title="Date" Format="MM/dd/yyyy">
+            <EditTemplate>
+                <MudDatePicker @bind-Date="context.Item.Date" Label="Date" Variant="Variant.Outlined" />
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.Amount" Title="Amount" Format="C2">
+            <EditTemplate>
+                <MudNumericField @bind-Value="context.Item.Amount" Label="Amount" Variant="Variant.Outlined" Step="1M" Format="C2" />
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.IsPaid" Title="Paid">
+            <CellTemplate>
+                @if (context.Item.IsPaid)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
+                }
+            </CellTemplate>
+            <EditTemplate>
+                <MudCheckBox @bind-Value="context.Item.IsPaid" Label="Paid" Color="Color.Primary"/>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.IsHsaWithdrawn" Title="HSA Withdrawn">
+            <CellTemplate>
+                @if (context.Item.IsHsaWithdrawn)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
+                }
+            </CellTemplate>
+            <EditTemplate>
+                <MudCheckBox @bind-Value="context.Item.IsHsaWithdrawn" Label="HSA Withdrawn" Color="Color.Primary"/>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.IsAudited" Title="Audited">
+            <CellTemplate>
+                @if (context.Item.IsAudited)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
+                }
+            </CellTemplate>
+            <EditTemplate>
+                <MudCheckBox @bind-Value="context.Item.IsAudited" Label="Audited" Color="Color.Primary"/>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.LastUpdatedBy" Title="Updated By" Editable="false"/>
+        <PropertyColumn Property="x => x.LastUpdatedTime" Title="Updated" Format="MM/dd/yyyy" Editable="false"/>
+
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync"/>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="() => Delete(context.Item)" Disabled="!context.Item.AllowDelete"/>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        @if (_dataState.IsLoading)
+        {
+            <MudText Typo="Typo.subtitle2">Loading...</MudText>
+        }
+        else if (_dataState.HasError)
+        {
+            <MudText Typo="Typo.subtitle2" Color="Color.Error">@_dataState.ErrorMessage</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">No records found.</MudText>
+        }
+    </NoRecordsContent>
+    <PagerContent>
+        <MudDataGridPager T="TransactionResponse" />
+    </PagerContent>
+</MudDataGrid>
 
 @code {
+    private const string DataGridTitle = "Data";
+    private MudDataGrid<TransactionResponse> _dataGrid = null!;
+    private DataLoadState<TransactionResponse> _dataState = new();
+    private List<ProviderResponse> _providers = new();
+    private List<TransactionTypeResponse> _transactionTypes = new();
+    private List<PersonResponse> _persons = new();
+    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
+    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
+    private readonly Func<PersonResponse?,string> _personConverter = a => a?.Name ?? "";
     
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            // Start loading
+            _dataState.IsLoading = true;
+            _dataState.HasError = false;
+
+            // Load your data
+            var transactions = await GetData();
+            var providers = await GetProviders();
+            var transactionTypes = await GetTransactionTypes();
+            var persons = await GetPersons();
+            _providers = providers ?? [];
+            _transactionTypes = transactionTypes ?? [];
+            _persons = persons ?? [];
+            
+            _dataState.Items = transactions ?? [];            
+        }
+        catch (Exception ex)
+        {
+            _dataState.HasError = true;
+            _dataState.ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            _dataState.IsLoading = false;
+        }
+    }
+
+    private async Task Delete(TransactionResponse transaction)
+    {
+        var parameters = new DialogParameters
+        {
+            {nameof(Confirmation.ConfirmationType), "Delete"},
+            {nameof(Confirmation.TitleIcon), Icons.Material.Filled.Delete},
+            {nameof(Confirmation.ContentText), $"Are you sure you want to delete {transaction.TransactionId}?"},
+            {nameof(Confirmation.ButtonText), "Yes"},
+            {nameof(Confirmation.Color), Color.Error}
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await _dialogService.ShowAsync<Confirmation>("", parameters, options);
+
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false, Data: bool isCompletedSuccessfully })
+        {
+            if (!isCompletedSuccessfully)
+            {
+                return;
+            }
+            
+            var result = await _transactionManager.Delete(transaction.TransactionId);
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Deletion successful",
+                AlertHelper.DeleteFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task ShowAddDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        
+        var parameters = new DialogParameters
+        {
+            {nameof(AddTransaction.Providers), _providers},
+            {nameof(AddTransaction.TransactionTypes), _transactionTypes},
+            {nameof(AddTransaction.Persons), _persons},
+        };
+        
+        var dialog = await _dialogService.ShowAsync<AddTransaction>("", parameters, options);
+
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult == null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var data = dialogResult.Data;
+
+        if (data is NewTransactionModel model)
+        {
+            var result = await _transactionManager.Put(new AddTransactionRequest
+            {
+                TransactionTypeId = model.TransactionType.TransactionTypeId,
+                ProviderId = model.Provider.ProviderId,
+                PersonId = model.Person?.PersonId,
+                Date = model.Date!.Value,
+                Amount = model.Amount,
+                IsPaid = model.IsPaid,
+                IsHsaWithdrawn = model.IsHsaWithdrawn,
+                IsAudited = model.IsAudited
+            });
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Add successful",
+                AlertHelper.AddFallbackErrorMessage,
+                Load);
+        }
+    }
+    
+    private async Task ExportFiltered()
+    {
+        var filtered = _dataGrid.FilteredItems;
+
+        var encodedByteArray = await _clientExcelService.ExportAsync(
+            filtered,
+            sheetName: "Transactions",
+            mappers: new Dictionary<string, Func<TransactionResponse, object>>
+            {
+                //{ "Block Schedule Type", item => item.BlockScheduleType },
+                { "Id", item => $"{item.TransactionId}" },
+                { "Type", item => item.TransactionType.Code },
+                { "Provider", item => item.Provider.Name },
+                { "Person", item => item.Person?.Name ?? "" },
+                { "Date", item => $"'{item.Date:M/d/yy}" },
+                { "Amount", item => item.Amount },
+                { "Paid", item => item.IsPaid ? "Y" : "N" },
+                { "HSA Withdrawn", item => item.IsHsaWithdrawn ? "Y" : "N" },
+                { "Audited", item => item.IsAudited ? "Y" : "N" },
+                { "Created By", item => item.CreatedBy ?? "" },
+                { "Created On", item => $"'{item.CreatedTime:M/d/yy HH:mm}" },
+                { "Last Updated By", item => item.LastUpdatedBy ?? "" },
+                { "Last Updated On", item => $"'{item.LastUpdatedTime:M/d/yy HH:mm}" }
+            });
+
+        var fileName = $"Filtered_Transactions_{DateTime.Now:dd-MM-yyyy HH-mm-ss}.xlsx";
+
+        await _jsRuntime.InvokeVoidAsync("Download", new
+        {
+            ByteArray = encodedByteArray,
+            FileName = fileName
+        });
+    }
+
+    private async Task CommittedItemChanges(TransactionResponse item)
+    {
+        // set
+        var result = await _transactionManager.Post(new SetTransactionRequest
+        {
+            TransactionId = item.TransactionId,
+            TransactionTypeId = item.TransactionType.TransactionTypeId,
+            ProviderId = item.Provider.ProviderId,
+            PersonId = item.Person?.PersonId,
+            Date = item.Date ?? DateTime.MinValue,
+            Amount = item.Amount,
+            IsPaid = item.IsPaid,
+            IsHsaWithdrawn = item.IsHsaWithdrawn,
+            IsAudited = item.IsAudited,
+        });
+            
+        await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+            "Update successful",
+            AlertHelper.UpdateFallbackErrorMessage);
+    }
+
+    private async Task<List<TransactionResponse>?> GetData()
+    {
+        var result = await _transactionManager.Get();
+
+        var data = result.Data?
+            //.Select(TransactionTypeModel.FromTransactionTypeResponse)
+            .OrderBy(x => x.TransactionId).ToList();
+        
+        return data;
+    }
+
+    private async Task<List<ProviderResponse>?> GetProviders()
+    {
+        var result = await _providerManager.Get();
+
+        var data = result.Data?
+            //.Select(ProviderModel.FromProviderResponse)
+            .OrderBy(x => x.Name).ToList();
+        return data;
+    }
+
+    private async Task<List<TransactionTypeResponse>?> GetTransactionTypes()
+    {
+        var result = await _transactionTypeManager.Get();
+
+        var data = result.Data?
+            //.Select(ProviderModel.FromProviderResponse)
+            .OrderBy(x => x.Code).ToList();
+        return data;
+    }
+
+    private async Task<List<PersonResponse>?> GetPersons()
+    {
+        var result = await _personManager.Get();
+
+        var data = result.Data?
+            //.Select(ProviderModel.FromProviderResponse)
+            .OrderBy(x => x.Name).ToList();
+        return data;
+    }
 }
