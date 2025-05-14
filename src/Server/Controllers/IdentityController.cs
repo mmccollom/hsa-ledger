@@ -1,5 +1,7 @@
+using HsaLedger.Application.Mediator.Queries;
 using HsaLedger.Application.Requests.Identity;
 using HsaLedger.Application.Responses.Identity;
+using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Server.Identity;
 using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Shared.Wrapper;
@@ -105,7 +107,7 @@ public class IdentityController : ApiControllerBase
     [HttpPost]
     [Route("setEnabled")]
     [Authorize(Roles = "Administrator")]
-    public async Task<Result<string>> SetRoles(SetEnabledRequest request)
+    public async Task<Result<string>> SetEnabled(SetEnabledRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null) return await Result<string>.FailAsync("User not found.");
@@ -142,4 +144,25 @@ public class IdentityController : ApiControllerBase
 
         return await Result<string>.SuccessAsync("Roles updated.");
     }
+    
+    [HttpGet]
+    [Route("users")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<Result<IEnumerable<UserResponse>>> GetUsers()
+    {
+        var query = new GetUsersQuery();
+        var result = await Mediator.Send(query);
+        return result;
+    }
+    
+    [HttpGet]
+    [Route("roles")]
+    [Authorize(Roles = "Administrator")]
+    public async Task<Result<IEnumerable<RoleResponse>>> GetRoles()
+    {
+        var query = new GetRolesQuery();
+        var result = await Mediator.Send(query);
+        return result;
+    }
+
 }
