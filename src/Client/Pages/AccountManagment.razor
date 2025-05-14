@@ -1,0 +1,62 @@
+@page "/account"
+@using HsaLedger.Application.Requests.Identity
+
+<MudPaper Class="pa-6 mx-auto mt-6" MaxWidth="500px" Elevation="4">
+    <MudText Typo="Typo.h5" GutterBottom="true">Account Management</MudText>
+
+    <MudDivider Class="mb-4" />
+
+    <!-- Change Password Section -->
+    <MudText Typo="Typo.h6" Class="mb-2">Change Password</MudText>
+    <MudTextField @bind-Value="_currentPassword" Label="Current Password" Variant="Variant.Outlined" InputType="InputType.Password" Required="true" />
+    <MudTextField @bind-Value="_newPassword" Label="New Password" Variant="Variant.Outlined" InputType="InputType.Password" Required="true" />
+    <MudTextField @bind-Value="_confirmNewPassword" Label="Confirm New Password" Variant="Variant.Outlined" InputType="InputType.Password" Required="true" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ChangePassword" Class="mt-2">Update Password</MudButton>
+
+    <MudSnackbarProvider />
+</MudPaper>
+
+@code {
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmNewPassword = string.Empty;
+
+    private async Task ChangePassword()
+    {
+        if (_newPassword != _confirmNewPassword)
+        {
+            _snackBar.Add("Passwords do not match.", Severity.Error);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_currentPassword) || string.IsNullOrWhiteSpace(_newPassword))
+        {
+            _snackBar.Add("Please fill out all fields to change your password.", Severity.Warning);
+            return;
+        }
+
+        var changePasswordRequest = new ChangePasswordRequest
+        {
+            Password = _currentPassword,
+            NewPassword = _newPassword,
+            ConfirmNewPassword = _confirmNewPassword
+        };
+
+        var result = await _authenticationManager.ChangePassword(changePasswordRequest);
+
+        if (result.Succeeded)
+        {
+            _snackBar.Add("Password updated successfully.", Severity.Success);    
+        }
+        else if(result.Messages is { Count: > 0 })
+        {
+            var errorMessage = string.Join(", ", result.Messages!);
+            _snackBar.Add(errorMessage, Severity.Error);
+        }
+        else
+        {
+            _snackBar.Add("Unexpected error occurred while changing password.", Severity.Error);
+        }
+    }
+}

@@ -46,8 +46,11 @@
             <UserCard Class="mt-n2"/>
             <MudDivider Class="mb-2"/>
             <MudList T="string">
-                <MudListItem Text="Account" Href="/account" Icon="@Icons.Material.Outlined.Person"/>
-                <MudListItem Text="Change Password" OnClick="InvokeChangePasswordModal" Icon="@Icons.Material.Outlined.Password"/>
+                <MudListItem Text="Account" Icon="@Icons.Material.Outlined.Person" OnClick="NavigateToAccount"/>
+                @if (_isAdministrator)
+                {
+                    <MudListItem Text="Manage Users" Icon="@Icons.Material.Outlined.AdminPanelSettings" OnClick="NavigateToManageUsers"/>
+                }
                 <MudListItem Text="Logout" Icon="@Icons.Material.Filled.Logout" OnClick="Logout"/>
             </MudList>
             <MudDivider Class="mb-2"/>

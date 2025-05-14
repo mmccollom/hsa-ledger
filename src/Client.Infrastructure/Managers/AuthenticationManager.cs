@@ -1,9 +1,9 @@
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
 using HsaLedger.Application.Requests.Identity;
 using HsaLedger.Application.Responses.Identity;
+using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Application.Services;
 using HsaLedger.Client.Infrastructure.Auth;
 using HsaLedger.Client.Infrastructure.Extensions;
@@ -64,19 +64,13 @@ public class AuthenticationManager : IAuthenticationManager
                 return await Result.FailAsync("You are not authorized to use this application.");
             }
             
-            //var userImageURL = result.Data.UserImageURL;
             await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
             await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
             await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);
             await _localStorage.RemoveItemAsync(StorageConstants.Local.ChangeTemporaryPasswordGuid);
-            //if (!string.IsNullOrEmpty(userImageURL))
-            //{
-            //await _localStorage.SetItemAsync(StorageConstants.Local.UserImageURL, userImageURL);
-            //}
+
 
             await ((ClientStateProvider)_authenticationStateProvider).StateChangedAsync();
-
-            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             return await Result.SuccessAsync();
         }
@@ -96,21 +90,12 @@ public class AuthenticationManager : IAuthenticationManager
         return await Result.FailAsync(result.Messages);
     }
 
-    public async Task<bool> ConfirmChangeTemporaryPasswordGuid(string guid)
-    {
-        var guidToCompare =
-            await _localStorage.GetItemAsync<string>(StorageConstants.Local.ChangeTemporaryPasswordGuid);
-
-        return guid.Equals(guidToCompare.Replace("\"", ""));
-    }
-
     public async Task<IResult> Logout()
     {
         await _localStorage.RemoveItemAsync(StorageConstants.Local.AuthToken);
         await _localStorage.RemoveItemAsync(StorageConstants.Local.RefreshToken);
         await _localStorage.RemoveItemAsync(StorageConstants.Local.AuthTokenExpiration);
         await _localStorage.RemoveItemAsync(StorageConstants.Local.ChangeTemporaryPasswordGuid);
-        //await _localStorage.RemoveItemAsync(StorageConstants.Local.UserImageURL);
         ((ClientStateProvider)_authenticationStateProvider).MarkUserAsLoggedOut();
         _httpClient.DefaultRequestHeaders.Authorization = null;
         return await Result.SuccessAsync();
@@ -137,7 +122,6 @@ public class AuthenticationManager : IAuthenticationManager
         refreshToken = result.Data?.RefreshToken;
         var expiresIn = result.Data?.ExpiresIn;
         var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
-        //var userImageURL = result.Data.UserImageURL;
         await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
         await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
         await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);
@@ -166,30 +150,39 @@ public class AuthenticationManager : IAuthenticationManager
         var token = await _localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
         return token ?? null;
     }
-
-    public async Task<string> TryRefreshToken()
+    
+    public async Task<IResult<IEnumerable<UserResponse>>> GetUsers()
     {
-        //check if token exists
-        var availableToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
-        if (string.IsNullOrEmpty(availableToken))
-        {
-            return string.Empty;
-        }
-        
-        var expiry = await _localStorage.GetItemAsync<DateTime>(StorageConstants.Local.AuthTokenExpiration);
-        var utcNow = DateTime.UtcNow;
-        var diff = expiry - utcNow;
-        if (diff.TotalMinutes <= 1)
-        {
-            return await RefreshToken();
-        }
-        
-        var token = await _localStorage.GetItemAsync<string>(StorageConstants.Local.AuthToken);
-        return token ?? string.Empty;
+        var response = await _httpClient.GetAsync(IdentityEndpoints.GetUsers);
+        var result = await response.ToResult<IEnumerable<UserResponse>>();
+        return result;
     }
 
-    public async Task<string> TryForceRefreshToken()
+    public async Task<IResult<IEnumerable<RoleResponse>>> GetRoles()
     {
-        return await RefreshToken();
+        var response = await _httpClient.GetAsync(IdentityEndpoints.GetRoles);
+        var result = await response.ToResult<IEnumerable<RoleResponse>>();
+        return result;
+    }
+    
+    public async Task<IResult> Register(RegisterRequest registerRequest)
+    {
+        var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.Register, registerRequest);
+        var result = await response.ToResult<string>();
+        return result;
+    }
+    
+    public async Task<IResult> SetRoles(SetRolesRequest setRolesRequest)
+    {
+        var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.SetRoles, setRolesRequest);
+        var result = await response.ToResult<string>();
+        return result;
+    }
+    
+    public async Task<IResult> SetEnabled(SetEnabledRequest setEnabledRequest)
+    {
+        var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.SetEnabled, setEnabledRequest);
+        var result = await response.ToResult<string>();
+        return result;
     }
 }

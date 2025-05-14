@@ -8,4 +8,6 @@ internal static class IdentityEndpoints
     internal const string ChangePassword =  "api/Identity/changePassword";
     internal const string SetEnabled =   "api/Identity/setEnabled";
     internal const string SetRoles =   "api/Identity/setRoles";
+    internal const string GetUsers =   "api/Identity/users";
+    internal const string GetRoles = "api/Identity/roles";
 }

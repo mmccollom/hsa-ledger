@@ -1,0 +1,234 @@
+@page "/admin/managerUsers"
+@attribute [Authorize(Roles = "Administrator")]
+@using HsaLedger.Application.Requests.Identity
+@using HsaLedger.Client.Common
+@using HsaLedger.Client.Dialogs
+
+<PageTitle>HSA | Users</PageTitle>
+<MudDataGrid T="UserModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
+             EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+             CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@DataGridTitle</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ShowAddDialog">Add</MudButton>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.UserId" Title="Id" Editable="false"/>
+        <PropertyColumn Property="x => x.Username"/>
+        <PropertyColumn Property="x => x.IsEnabled" Title="Enabled">
+            <CellTemplate>
+                @if (context.Item.IsEnabled)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
+                }
+            </CellTemplate>
+            <EditTemplate>
+                <MudCheckBox @bind-Value="context.Item.IsEnabled" Label="Enabled" Color="Color.Primary"/>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.GetRoles()" Title="Roles">
+            <EditTemplate>
+                <MudSelect T="RoleModel" MultiSelection="true" ToStringFunc="_roleConverter"
+                           @bind-SelectedValues="context.Item.Roles"
+                           Margin="@Margin.Dense" Label="Roles" Variant="Variant.Outlined">
+                    @foreach (var role in _roles)
+                    {
+                        <MudSelectItem T="RoleModel" Value="@role">@role.RoleName</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync"/>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <NoRecordsContent>
+        @if (_dataState.IsLoading)
+        {
+            <MudText Typo="Typo.subtitle2">Loading...</MudText>
+        }
+        else if (_dataState.HasError)
+        {
+            <MudText Typo="Typo.subtitle2" Color="Color.Error">@_dataState.ErrorMessage</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle2">No records found.</MudText>
+        }
+    </NoRecordsContent>
+</MudDataGrid>
+
+@code {
+    
+    private const string DataGridTitle = "Users";
+    private DataLoadState<UserModel> _dataState = new();
+    private List<RoleModel> _roles = new();
+    private List<UserModel> _comparedUsers = new();
+    private readonly Func<RoleModel?,string> _roleConverter = a => a?.RoleName ?? "";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            // Start loading
+            _dataState.IsLoading = true;
+            _dataState.HasError = false;
+
+            // Load your data
+            var users = await GetData();
+            var roles = await GetRoles();
+            _roles = roles ?? [];
+            // set _comparedUsers to a deep copy of users
+            _comparedUsers = users?.Select(x => new UserModel
+            {
+                UserId = x.UserId,
+                Username = x.Username,
+                IsEnabled = x.IsEnabled,
+                Roles = x.Roles.Select(r => new RoleModel(r.RoleId)
+                {
+                    RoleName = r.RoleName,
+                    NormalizedName = r.NormalizedName
+                }).ToList()
+            }).ToList() ?? new List<UserModel>();
+            _dataState.Items = users ?? [];
+        }
+        catch (Exception ex)
+        {
+            _dataState.HasError = true;
+            _dataState.ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            _dataState.IsLoading = false;
+        }
+    }
+
+    private async Task ShowAddDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        
+        var dialog = await _dialogService.ShowAsync<AddUser>("", options);
+
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult == null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var data = dialogResult.Data;
+
+        if (data is NewUserModel model)
+        {
+            var result = await _authenticationManager.Register(new RegisterRequest
+            {
+                Username = model.Username,
+                Password = model.Password,
+            });
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Add successful",
+                AlertHelper.AddFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task CommittedItemChanges(UserModel item)
+    {
+        var comparedUser = _comparedUsers.FirstOrDefault(x => x.UserId == item.UserId);
+        
+        if (comparedUser == null)
+        {
+            return;
+        }
+
+        var newRoles = item.Roles.Select(x => x.RoleId).ToList();
+        var oldRoles = comparedUser.Roles.Select(x => x.RoleId).ToList();
+        
+        // Check if roles have changed
+        if (newRoles.HasChangesComparedTo(oldRoles))
+        {
+            // set roles
+            var roleResult = await _authenticationManager.SetRoles(new SetRolesRequest
+            {
+                Username = item.Username,
+                Roles = item.Roles.Select(x => x.RoleName).ToList()
+            });
+
+            if (!roleResult.Succeeded)
+            {
+                if (roleResult.Messages != null && roleResult.Messages.Any())
+                {
+                    foreach (var message in roleResult.Messages)
+                    {
+                        _snackBar.Add(message, Severity.Error);
+                    }
+                }
+                else
+                {
+                    _snackBar.Add("Failed to set roles", Severity.Error);
+                }
+            }
+        }
+        
+        // Check if enabled status has changed
+        if (item.IsEnabled != comparedUser.IsEnabled)
+        {
+            // set enabled status
+            var enabledResult = await _authenticationManager.SetEnabled(new SetEnabledRequest
+            {
+                Username = item.Username,
+                IsEnabled = item.IsEnabled
+            });
+            
+            if (!enabledResult.Succeeded)
+            {
+                if (enabledResult.Messages != null && enabledResult.Messages.Any())
+                {
+                    foreach (var message in enabledResult.Messages)
+                    {
+                        _snackBar.Add(message, Severity.Error);
+                    }
+                }
+                else
+                {
+                    _snackBar.Add("Failed to set enabled status", Severity.Error);
+                }
+            }
+        }
+    }
+
+    private async Task<List<UserModel>?> GetData()
+    {
+        var result = await _authenticationManager.GetUsers();
+
+        var data = result.Data?
+            .Select(UserModel.FromUserResponse)
+            .OrderBy(x => x.Username).ToList();
+        
+        return data;
+    }
+
+    private async Task<List<RoleModel>?> GetRoles()
+    {
+        var result = await _authenticationManager.GetRoles();
+
+        var data = result.Data?
+            .Select(RoleModel.FromRoleResponse)
+            .OrderBy(x => x.RoleName).ToList();
+        return data;
+    }
+}

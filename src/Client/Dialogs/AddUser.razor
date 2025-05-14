@@ -1,0 +1,71 @@
+@using FluentValidation
+@using HsaLedger.Client.Common
+@namespace HsaLedger.Client.Dialogs
+<MudDialog>
+    <DialogContent>
+        <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+            <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
+            <MudTextField Variant="Variant.Outlined"
+                          @bind-Value="_model.Username"
+                          For="@(() => _model.Username)"
+                          Immediate="true"
+                          Label="Username*"/>
+            <MudTextField Variant="Variant.Outlined"
+                          @bind-Value="_model.Password"
+                          For="@(() => _model.Password)"
+                          Immediate="true"
+                          Label="Password*"/>
+            <MudTextField Variant="Variant.Outlined"
+                          @bind-Value="_model.ConfirmPassword"
+                          For="@(() => _model.ConfirmPassword)"
+                          Immediate="true"
+                          Label="Confirm Password*"/>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Class="px-10" Variant="Variant.Filled" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Class="px-10" Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitAsync">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MudForm? _form;
+    private readonly NewUserModel _model = new();
+    private readonly NewUserModelFluentValidator _validator = new();
+    
+    private void Cancel() => MudDialog.Cancel();
+    private async Task SubmitAsync()
+    {
+        await _form!.Validate();
+
+        if (_form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(_model));
+        }
+    }
+
+    
+    public class NewUserModelFluentValidator : AbstractValidator<NewUserModel>
+    {
+        public NewUserModelFluentValidator()
+        {
+            RuleFor(x => x.Username)
+                .NotEmpty()
+                .Length(1,256);
+            RuleFor(x => x.Password)
+                .NotEmpty();
+            RuleFor(x => x.ConfirmPassword)
+                .NotEmpty();
+            RuleFor(x => x)
+                .Must(x => x.Password.Equals(x.ConfirmPassword))
+                .WithMessage("Password and Confirm Password must match.");
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<NewUserModel>.CreateWithOptions((NewUserModel)model, x => x.IncludeProperties(propertyName)));
+            return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
+        };
+    }
+}

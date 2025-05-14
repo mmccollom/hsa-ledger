@@ -1,11 +1,10 @@
 using HsaLedger.Client.Common;
 using HsaLedger.Client.Dialogs;
-using HsaLedger.Client.Pages.Authentication;
 using HsaLedger.Shared.Common.Constants.Permission;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
-namespace HsaLedger.Client.Shared;    
+namespace HsaLedger.Client.Shared;
 
 public partial class MainBody
     {
@@ -26,7 +25,8 @@ public partial class MainBody
         private string? SecondName { get; set; }
         private string? Email { get; set; }
         private char FirstLetterOfName { get; set; }
-        private bool _rightToLeft = false;
+        private bool _rightToLeft;
+        private bool _isAdministrator;
 
         private async Task RightToLeftToggle()
         {
@@ -43,9 +43,16 @@ public partial class MainBody
 
         protected override async Task OnInitializedAsync()
         {
+            var currentUser = await _authenticationManager.CurrentUser();
+            var role = currentUser.Claims.Where(x => x.Type == ApplicationClaimTypes.Role).Select(x=> x.Value).FirstOrDefault() ?? "";
+            if(role.Contains("Administrator"))
+            {
+                _isAdministrator = true;
+            }
+            
             _rightToLeft = await _clientPreferenceManager.IsRtl();
             _interceptor.RegisterEvent();
-            _snackBar.Add($"Welcome {FirstName}", Severity.Success);
+            //_snackBar.Add($"Welcome {FirstName}", Severity.Success);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -116,18 +123,23 @@ public partial class MainBody
 
         private MudMenu? _profileMenu;
 
-        private async Task InvokeChangePasswordModal()
-        {
-            await _profileMenu!.CloseMenuAsync();
-            var dialog = await _dialogService.ShowAsync<ChangePassword>("Change Password");
-            await dialog.Result;
-        }
-
         private void DrawerToggle()
         {
             _drawerOpen = !_drawerOpen;
         }
+        
+        private async Task NavigateToAccount()
+        {
+            await _profileMenu!.CloseMenuAsync();
+            _navigationManager.NavigateTo("/account");
+        }
 
+        private async Task NavigateToManageUsers()
+        {
+            await _profileMenu!.CloseMenuAsync();
+            _navigationManager.NavigateTo("/admin/managerUsers");
+        }
+        
         private async Task Logout()
         {
             var parameters = new DialogParameters
