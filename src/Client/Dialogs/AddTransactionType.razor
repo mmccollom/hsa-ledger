@@ -1,5 +1,4 @@
 @using FluentValidation
-@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
@@ -15,7 +14,7 @@
                           @bind-Value="_model.Description"
                           For="@(() => _model.Description)"
                           Label="Description*"/>
-            <MudSelect T="ProviderResponse" MultiSelection="true" ToStringFunc="_providerConverter"
+            <MudSelect T="ProviderModel" MultiSelection="true" ToStringFunc="_providerConverter"
                        @bind-SelectedValues="_model.Providers"
                        Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
                 @if (Providers != null)
@@ -40,7 +39,7 @@
     private MudForm? _form;
     private readonly NewTransactionTypeModel _model = new();
     private readonly NewTransactionTypeModelFluentValidator _validator = new();
-    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
+    private readonly Func<ProviderModel?,string> _providerConverter = a => a?.Name ?? "";
     
     private void Cancel() => MudDialog.Cancel();
     private async Task SubmitAsync()

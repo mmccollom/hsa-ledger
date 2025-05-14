@@ -1,4 +1,3 @@
-using System.Globalization;
 using FluentValidation;
 using HsaLedger.Application.Common.Interfaces;
 using HsaLedger.Application.Mediator.Commands;
