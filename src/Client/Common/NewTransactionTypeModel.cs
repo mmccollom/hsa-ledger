@@ -6,5 +6,5 @@ public class NewTransactionTypeModel
 {
     public string Code { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public IEnumerable<ProviderResponse> Providers { get; set; } = [];
+    public IEnumerable<ProviderModel> Providers { get; set; } = [];
 }
