@@ -3,7 +3,7 @@ name: Deploy Blazor Client to S3
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
