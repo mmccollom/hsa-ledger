@@ -142,6 +142,7 @@ public partial class MainBody
         
         private async Task Logout()
         {
+            await _profileMenu!.CloseMenuAsync();
             var parameters = new DialogParameters
             {
                 {nameof(Confirmation.ConfirmationType), "Logout"},
@@ -155,7 +156,7 @@ public partial class MainBody
 
             var dialog = await _dialogService.ShowAsync<Confirmation>("Logout", parameters, options);
             var result = await dialog.Result;
-            if (result != null && (bool)result.Data!)
+            if (result is { Canceled: false } && (bool)result.Data!)
             {
                 await _authenticationManager.Logout();
                 _navigationManager.NavigateTo("/login");
