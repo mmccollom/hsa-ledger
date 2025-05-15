@@ -4,7 +4,7 @@
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Dialogs
 
-<PageTitle>HSA | Type</PageTitle>
+<PageTitle>HSA | Data</PageTitle>
 <MudDataGrid T="TransactionResponse" @ref="_dataGrid" Items="@_dataState.Items" Loading="@_dataState.IsLoading"
              SortMode="SortMode.Multiple" Filterable="true" Dense="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"

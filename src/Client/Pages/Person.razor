@@ -4,7 +4,7 @@
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Dialogs
 
-<PageTitle>HSA | Type</PageTitle>
+<PageTitle>HSA | Person</PageTitle>
 <MudDataGrid T="PersonResponse" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
              CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
