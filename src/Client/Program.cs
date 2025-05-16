@@ -17,7 +17,7 @@ if (builder.HostEnvironment.IsDevelopment())
 else
 {
     // TODO: Add production url
-    url = "http://18.190.144.176";
+    url = "http://3.17.130.61";
 }
     
 builder.Services.AddClientServices(url);
