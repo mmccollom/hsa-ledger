@@ -17,7 +17,7 @@ if (builder.HostEnvironment.IsDevelopment())
 else
 {
     // TODO: Add production url
-    url = "http://api.hsaledger.com";
+    url = "https://api.hsaledger.com";
 }
     
 builder.Services.AddClientServices(url);
