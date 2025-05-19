@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Lambda.Infrastructure\Lambda.Infrastructure.csproj" />
-      <ProjectReference Include="..\src\Client.Infrastructure\Client.Infrastructure.csproj" />
+      <ProjectReference Include="..\Client.Infrastructure\Client.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>
