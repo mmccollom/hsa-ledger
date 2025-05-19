@@ -12,7 +12,7 @@ namespace HsaLedger.Server.Controllers;
 public class TransactionTypeController : ApiControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Administrator,Operations")]
+    [Authorize(Roles = "Administrator,Operations,Service")]
     public async Task<Result<IEnumerable<TransactionTypeResponse>>> Get()
     {
         var query = new GetTransactionTypeQuery();

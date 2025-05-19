@@ -12,7 +12,7 @@ namespace HsaLedger.Server.Controllers;
 public class PersonController : ApiControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Administrator,Operations")]
+    [Authorize(Roles = "Administrator,Operations,Service")]
     public async Task<Result<IEnumerable<PersonResponse>>> Get()
     {
         var query = new GetPersonQuery();

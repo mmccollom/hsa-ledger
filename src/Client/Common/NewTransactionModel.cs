@@ -5,9 +5,9 @@ namespace HsaLedger.Client.Common;
 
 public class NewTransactionModel
 {
-    public TransactionTypeResponse TransactionType { get; set; } = null!;
-    public ProviderResponse Provider { get; set; } = null!;
-    public PersonResponse? Person { get; set; }
+    public TransactionTypeModel TransactionType { get; set; } = null!;
+    public ProviderModel Provider { get; set; } = null!;
+    public PersonModel? Person { get; set; }
     public DateTime? Date { get; set; }
     public decimal Amount { get; set; }
     public bool IsPaid { get; set; }

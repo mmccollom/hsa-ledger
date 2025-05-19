@@ -1,12 +1,11 @@
 @using FluentValidation
-@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
     <DialogContent>
         <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
             <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
-            <MudSelect T="TransactionTypeResponse" ToStringFunc="_transactionTypeConverter"
+            <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
                        @bind-Value="_model.TransactionType"
                        Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
                 @if (TransactionTypes != null)
@@ -17,7 +16,7 @@
                     }
                 }
             </MudSelect>
-            <MudSelect T="ProviderResponse" ToStringFunc="_providerConverter" @bind-Value="_model.Provider"
+            <MudSelect T="ProviderModel" ToStringFunc="_providerConverter" @bind-Value="_model.Provider"
                        Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
                 @if (Providers != null)
                 {
@@ -27,9 +26,9 @@
                     }
                 }
             </MudSelect>
-            <MudSelect T="PersonResponse" ToStringFunc="_personConverter" @bind-Value="_model.Person"
+            <MudSelect T="PersonModel" ToStringFunc="_personConverter" @bind-Value="_model.Person"
                        Margin="@Margin.Dense" Label="Person" Variant="Variant.Outlined">
-                <MudSelectItem T="PersonResponse" />
+                <MudSelectItem T="PersonModel" />
                 @if (Persons != null)
                 {
                     @foreach (var person in Persons)
@@ -61,16 +60,16 @@
 </MudDialog>
 @code {
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public IEnumerable<ProviderResponse>? Providers { get; set; }
-    [Parameter] public IEnumerable<TransactionTypeResponse>? TransactionTypes { get; set; }
-    [Parameter] public IEnumerable<PersonResponse>? Persons { get; set; }
+    [Parameter] public IEnumerable<ProviderModel>? Providers { get; set; }
+    [Parameter] public IEnumerable<TransactionTypeModel>? TransactionTypes { get; set; }
+    [Parameter] public IEnumerable<PersonModel>? Persons { get; set; }
 
     private MudForm? _form;
     private readonly NewTransactionModel _model = new();
     private readonly NewTransactionModelFluentValidator _validator = new();
-    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
-    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
-    private readonly Func<PersonResponse?,string> _personConverter = a => a?.Name ?? "";
+    private readonly Func<ProviderModel?,string> _providerConverter = a => a?.Name ?? "";
+    private readonly Func<TransactionTypeModel?,string> _transactionTypeConverter = a => a?.Code ?? "";
+    private readonly Func<PersonModel?,string> _personConverter = a => a?.Name ?? "";
     
     private void AddToPendingUpload(IReadOnlyList<IBrowserFile>? files)
     {

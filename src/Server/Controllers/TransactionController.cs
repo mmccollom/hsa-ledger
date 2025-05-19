@@ -30,7 +30,7 @@ public class TransactionController : ApiControllerBase
     }
     
     [HttpPut]
-    [Authorize(Roles = "Administrator,Operations")]
+    [Authorize(Roles = "Administrator,Operations,Service")]
     public async Task<Result<int>> Add(AddTransactionRequest document)
     {
         var command = new AddTransactionCommand(document);

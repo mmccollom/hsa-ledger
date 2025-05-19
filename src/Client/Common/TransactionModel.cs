@@ -51,6 +51,11 @@ public class TransactionModel
             IsHsaWithdrawn = response.IsHsaWithdrawn,
             IsAudited = response.IsAudited,
             Documents = [..response.Documents.Select(DocumentModel.FromDocumentResponse)],
+            AllowDelete = response.AllowDelete,
+            CreatedTime = response.CreatedTime,
+            CreatedBy = response.CreatedBy,
+            LastUpdatedTime = response.LastUpdatedTime,
+            LastUpdatedBy = response.LastUpdatedBy,
         };
     }
 }

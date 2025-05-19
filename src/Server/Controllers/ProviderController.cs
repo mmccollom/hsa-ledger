@@ -12,7 +12,7 @@ namespace HsaLedger.Server.Controllers;
 public class ProviderController : ApiControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Administrator,Operations")]
+    [Authorize(Roles = "Administrator,Operations,Service")]
     public async Task<Result<IEnumerable<ProviderResponse>>> Get()
     {
         var query = new GetProviderQuery();
