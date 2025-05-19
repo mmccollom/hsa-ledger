@@ -19,6 +19,7 @@ public class TransactionModel
     public bool IsAudited { get; set; }
     public required List<DocumentModel> Documents { get; set; }
     public bool AllowDelete { get; set; }
+    public bool IsDocumentAvailable { get; set; }
     public DateTime CreatedTime { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? LastUpdatedTime { get; set; }
@@ -51,6 +52,7 @@ public class TransactionModel
             IsHsaWithdrawn = response.IsHsaWithdrawn,
             IsAudited = response.IsAudited,
             Documents = [..response.Documents.Select(DocumentModel.FromDocumentResponse)],
+            IsDocumentAvailable = response.Documents.Count != 0,
             AllowDelete = response.AllowDelete,
             CreatedTime = response.CreatedTime,
             CreatedBy = response.CreatedBy,

@@ -131,6 +131,7 @@
 
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
+                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Download" OnClick="() => DownloadDocuments(context.Item)" Disabled="!context.Item.IsDocumentAvailable"/>
                 <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync"/>
                 <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="() => Delete(context.Item)" Disabled="!context.Item.AllowDelete"/>
             </CellTemplate>
@@ -297,6 +298,18 @@
     {
         item.FilesPendingUpload = new List<IBrowserFile>(files ?? []);
         item.IsPendingUpload = true;
+    }
+
+    private async Task DownloadDocuments(TransactionModel transaction)
+    {
+        foreach (var document in transaction.Documents)
+        {
+            await _jsRuntime.InvokeVoidAsync("Download", new
+            {
+                ByteArray = Convert.ToBase64String(document.Content),
+                FileName = document.Fullname
+            });
+        }
     }
     
     private async Task ExportFiltered()
