@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
 using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Projections;
-using HsaLedger.Client.Infrastructure.Extensions;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
+using HsaLedger.Shared.Common.Extensions;
 using HsaLedger.Shared.Wrapper;
 
 namespace HsaLedger.Client.Infrastructure.Managers;

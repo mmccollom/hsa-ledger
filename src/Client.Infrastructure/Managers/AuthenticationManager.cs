@@ -6,11 +6,11 @@ using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Application.Services;
 using HsaLedger.Client.Infrastructure.Auth;
-using HsaLedger.Client.Infrastructure.Extensions;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
 using HsaLedger.Shared.Common.Constants.Permission;
 using HsaLedger.Shared.Common.Constants.Storage;
+using HsaLedger.Shared.Common.Extensions;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Components.Authorization;
 
