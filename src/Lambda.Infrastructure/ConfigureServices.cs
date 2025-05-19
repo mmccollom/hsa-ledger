@@ -35,7 +35,7 @@ public static class ConfigureServices
     private static async Task<ServiceSecrets> GetServiceSecrets()
     {
         // get api credentials from AWS secrets
-        const string secretName = "service-secrets";
+        const string secretName = "hsa-service-secrets";
         const string region = "us-east-2";
         var secrets = await AwsSecretService.AwsConfigurationFromSecret<ServiceSecrets>(secretName, region);
 

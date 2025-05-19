@@ -43,6 +43,15 @@
             <MudCheckBox @bind-Value="_model.IsPaid" Label="Paid" Color="Color.Primary" />
             <MudCheckBox @bind-Value="_model.IsHsaWithdrawn" Label="HSA Withdrawn" Color="Color.Primary" />
             <MudCheckBox @bind-Value="_model.IsAudited" Label="Audited" Color="Color.Primary" />
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".jpg, .png, .pdf" FilesChanged="AddToPendingUpload" MaximumFileCount="100">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudUpload">
+                        Upload documentation
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -62,6 +71,11 @@
     private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
     private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
     private readonly Func<PersonResponse?,string> _personConverter = a => a?.Name ?? "";
+    
+    private void AddToPendingUpload(IReadOnlyList<IBrowserFile>? files)
+    {
+        _model.FilesPendingUpload = new List<IBrowserFile>(files ?? []);
+    }
     
     private void Cancel() => MudDialog.Cancel();
     private async Task SubmitAsync()

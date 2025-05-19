@@ -69,8 +69,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole, string
             select new AppRole
             {
                 RoleId = r.Id,
-                RoleName = r.Name,
-                NormalizedName = r.NormalizedName
+                RoleName = r.Name!,
+                NormalizedName = r.NormalizedName!
             };
             
             return await data.ToListAsync();

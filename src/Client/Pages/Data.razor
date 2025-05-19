@@ -2,10 +2,11 @@
 @using HsaLedger.Application.Requests
 @using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
+@using HsaLedger.Client.Common.Extensions
 @using HsaLedger.Client.Dialogs
 
 <PageTitle>HSA | Data</PageTitle>
-<MudDataGrid T="TransactionResponse" @ref="_dataGrid" Items="@_dataState.Items" Loading="@_dataState.IsLoading"
+<MudDataGrid T="TransactionModel" @ref="_dataGrid" Items="@_dataState.Items" Loading="@_dataState.IsLoading"
              SortMode="SortMode.Multiple" Filterable="true" Dense="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
              CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
@@ -21,23 +22,23 @@
         <PropertyColumn Property="x => x.TransactionId" Title="ID" Editable="false"/>
         <PropertyColumn Property="x => x.TransactionType.Code" Title="Type">
             <EditTemplate>
-                <MudSelect T="TransactionTypeResponse" ToStringFunc="_transactionTypeConverter"
+                <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
                            @bind-Value="context.Item.TransactionType" Margin="@Margin.Dense" Label="Type"
                            Variant="Variant.Outlined">
                     @foreach (var transactionType in _transactionTypes)
                     {
-                        <MudSelectItem T="TransactionTypeResponse" Value="@transactionType">@transactionType.Code</MudSelectItem>
+                        <MudSelectItem T="TransactionTypeModel" Value="@transactionType">@transactionType.Code</MudSelectItem>
                     }
                 </MudSelect>
             </EditTemplate>
         </PropertyColumn>
         <PropertyColumn Property="x => x.Provider.Name" Title="Provider">
             <EditTemplate>
-                <MudSelect T="ProviderResponse" ToStringFunc="_providerConverter" @bind-Value="context.Item.Provider" 
+                <MudSelect T="ProviderModel" ToStringFunc="_providerConverter" @bind-Value="context.Item.Provider" 
                            Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
                     @foreach (var provider in _providers)
                     {
-                        <MudSelectItem T="ProviderResponse" Value="@provider">@provider.Name</MudSelectItem>
+                        <MudSelectItem T="ProviderModel" Value="@provider">@provider.Name</MudSelectItem>
                     }
                 </MudSelect>
             </EditTemplate>
@@ -45,12 +46,12 @@
         @* ReSharper disable once CSharpWarnings::CS8602 *@
         <PropertyColumn Property="x => x.Person.Name" Title="Person">
             <EditTemplate>
-                <MudSelect T="PersonResponse" ToStringFunc="_personConverter" @bind-Value="context.Item.Person" 
+                <MudSelect T="PersonModel" ToStringFunc="_personConverter" @bind-Value="context.Item.Person" 
                            Margin="@Margin.Dense" Label="Person" Variant="Variant.Outlined">
-                    <MudSelectItem T="PersonResponse"></MudSelectItem>
+                    <MudSelectItem T="PersonModel"></MudSelectItem>
                     @foreach (var person in _persons)
                     {
-                        <MudSelectItem T="PersonResponse" Value="@person">@person.Name</MudSelectItem>
+                        <MudSelectItem T="PersonModel" Value="@person">@person.Name</MudSelectItem>
                     }
                 </MudSelect>
             </EditTemplate>
@@ -110,6 +111,21 @@
                 <MudCheckBox @bind-Value="context.Item.IsAudited" Label="Audited" Color="Color.Primary"/>
             </EditTemplate>
         </PropertyColumn>
+        
+        <PropertyColumn Property="x => x.GetDocumentNames()" Title="Documents">
+            <EditTemplate>
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".jpg, .png, .pdf" FilesChanged="x => AddToPendingUpload(x, context.Item)" MaximumFileCount="100">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.CloudUpload">
+                            Upload documentation
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </EditTemplate>
+        </PropertyColumn>
+        
         <PropertyColumn Property="x => x.LastUpdatedBy" Title="Updated By" Editable="false"/>
         <PropertyColumn Property="x => x.LastUpdatedTime" Title="Updated" Format="MM/dd/yyyy" Editable="false"/>
 
@@ -141,14 +157,14 @@
 
 @code {
     private const string DataGridTitle = "Data";
-    private MudDataGrid<TransactionResponse> _dataGrid = null!;
-    private DataLoadState<TransactionResponse> _dataState = new();
-    private List<ProviderResponse> _providers = new();
-    private List<TransactionTypeResponse> _transactionTypes = new();
-    private List<PersonResponse> _persons = new();
-    private readonly Func<ProviderResponse?,string> _providerConverter = a => a?.Name ?? "";
-    private readonly Func<TransactionTypeResponse?,string> _transactionTypeConverter = a => a?.Code ?? "";
-    private readonly Func<PersonResponse?,string> _personConverter = a => a?.Name ?? "";
+    private MudDataGrid<TransactionModel> _dataGrid = null!;
+    private DataLoadState<TransactionModel> _dataState = new();
+    private List<ProviderModel> _providers = new();
+    private List<TransactionTypeModel> _transactionTypes = new();
+    private List<PersonModel> _persons = new();
+    private readonly Func<ProviderModel?,string> _providerConverter = a => a?.Name ?? "";
+    private readonly Func<TransactionTypeModel?,string> _transactionTypeConverter = a => a?.Code ?? "";
+    private readonly Func<PersonModel?,string> _personConverter = a => a?.Name ?? "";
     
     protected override async Task OnInitializedAsync()
     {
@@ -185,7 +201,7 @@
         }
     }
 
-    private async Task Delete(TransactionResponse transaction)
+    private async Task Delete(TransactionModel transaction)
     {
         var parameters = new DialogParameters
         {
@@ -241,6 +257,22 @@
 
         if (data is NewTransactionModel model)
         {
+            var documents = new List<AddDocumentRequest>();
+            foreach (var file in model.FilesPendingUpload ?? [])
+            {
+                var content = await file.GetFileBytesAsync();
+                var uploadRequest = new AddDocumentRequest
+                {
+                    Fullname = file.Name,
+                    Name = Path.GetFileNameWithoutExtension(file.Name),
+                    Extension = Path.GetExtension(file.Name),
+                    Content = content
+                };
+
+                documents.Add(uploadRequest);
+            }
+            
+            
             var result = await _transactionManager.Put(new AddTransactionRequest
             {
                 TransactionTypeId = model.TransactionType.TransactionTypeId,
@@ -250,7 +282,8 @@
                 Amount = model.Amount,
                 IsPaid = model.IsPaid,
                 IsHsaWithdrawn = model.IsHsaWithdrawn,
-                IsAudited = model.IsAudited
+                IsAudited = model.IsAudited,
+                Documents = documents
             });
             
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
@@ -260,6 +293,12 @@
         }
     }
     
+    private void AddToPendingUpload(IReadOnlyList<IBrowserFile>? files, TransactionModel item)
+    {
+        item.FilesPendingUpload = new List<IBrowserFile>(files ?? []);
+        item.IsPendingUpload = true;
+    }
+    
     private async Task ExportFiltered()
     {
         var filtered = _dataGrid.FilteredItems;
@@ -267,7 +306,7 @@
         var encodedByteArray = await _clientExcelService.ExportAsync(
             filtered,
             sheetName: "Transactions",
-            mappers: new Dictionary<string, Func<TransactionResponse, object>>
+            mappers: new Dictionary<string, Func<TransactionModel, object>>
             {
                 //{ "Block Schedule Type", item => item.BlockScheduleType },
                 { "Id", item => $"{item.TransactionId}" },
@@ -294,8 +333,9 @@
         });
     }
 
-    private async Task CommittedItemChanges(TransactionResponse item)
+    private async Task CommittedItemChanges(TransactionModel item)
     {
+        var hasError = false;
         // set
         var result = await _transactionManager.Post(new SetTransactionRequest
         {
@@ -309,49 +349,101 @@
             IsHsaWithdrawn = item.IsHsaWithdrawn,
             IsAudited = item.IsAudited,
         });
+
+        if (item.IsPendingUpload)
+        {
+            // delete current documents
+            foreach (var document in item.Documents)
+            {
+                await _documentManager.Delete(document.DocumentId);
+            }
             
-        await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
-            "Update successful",
-            AlertHelper.UpdateFallbackErrorMessage);
+            // upload new documents
+            foreach (var file in item.FilesPendingUpload ?? [])
+            {
+                var content = await file.GetFileBytesAsync();
+                var uploadRequest = new AddDocumentRequest
+                {
+                    TransactionId = item.TransactionId,
+                    Fullname = file.Name,
+                    Name = Path.GetFileNameWithoutExtension(file.Name),
+                    Extension = Path.GetExtension(file.Name),
+                    Content = content
+                };
+                
+                var addDocumentResult = await _documentManager.Put(uploadRequest);
+                
+                if(!addDocumentResult.Succeeded)
+                {
+                    await AlertHelper.DataAccessAlertHandler(_snackBar, addDocumentResult, 
+                        "Failed to upload document",
+                        AlertHelper.UpdateFallbackErrorMessage);
+
+                    hasError = true;
+                }
+            }
+            
+            // retrieve documents from database
+            var documentsResult = await _transactionManager.GetDocuments(item.TransactionId);
+            if (documentsResult.Succeeded)
+            {
+                item.Documents = documentsResult.Data?.Select(DocumentModel.FromDocumentResponse).ToList() ?? [];
+            }
+            else
+            {
+                await AlertHelper.DataAccessAlertHandler(_snackBar, documentsResult, 
+                    "Failed to retrieve documents",
+                    AlertHelper.UpdateFallbackErrorMessage);
+
+                hasError = true;
+            }
+        }
+
+        if (!hasError)
+        {
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Update successful",
+                AlertHelper.UpdateFallbackErrorMessage);
+        }
     }
 
-    private async Task<List<TransactionResponse>?> GetData()
+    private async Task<List<TransactionModel>?> GetData()
     {
         var result = await _transactionManager.Get();
 
         var data = result.Data?
-            //.Select(TransactionTypeModel.FromTransactionTypeResponse)
+            .Select(TransactionModel.FromTransactionTypeResponse)
             .OrderBy(x => x.TransactionId).ToList();
         
         return data;
     }
 
-    private async Task<List<ProviderResponse>?> GetProviders()
+    private async Task<List<ProviderModel>?> GetProviders()
     {
         var result = await _providerManager.Get();
 
         var data = result.Data?
-            //.Select(ProviderModel.FromProviderResponse)
+            .Select(ProviderModel.FromProviderResponse)
             .OrderBy(x => x.Name).ToList();
         return data;
     }
 
-    private async Task<List<TransactionTypeResponse>?> GetTransactionTypes()
+    private async Task<List<TransactionTypeModel>?> GetTransactionTypes()
     {
         var result = await _transactionTypeManager.Get();
 
         var data = result.Data?
-            //.Select(ProviderModel.FromProviderResponse)
+            .Select(TransactionTypeModel.FromTransactionTypeResponse)
             .OrderBy(x => x.Code).ToList();
         return data;
     }
 
-    private async Task<List<PersonResponse>?> GetPersons()
+    private async Task<List<PersonModel>?> GetPersons()
     {
         var result = await _personManager.Get();
 
         var data = result.Data?
-            //.Select(ProviderModel.FromProviderResponse)
+            .Select(PersonModel.FromPersonResponse)
             .OrderBy(x => x.Name).ToList();
         return data;
     }

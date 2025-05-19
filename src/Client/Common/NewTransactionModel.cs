@@ -1,4 +1,5 @@
 using HsaLedger.Application.Responses.Projections;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace HsaLedger.Client.Common;
 
@@ -12,4 +13,5 @@ public class NewTransactionModel
     public bool IsPaid { get; set; }
     public bool IsHsaWithdrawn { get; set; }
     public bool IsAudited { get; set; }
+    public List<IBrowserFile>? FilesPendingUpload { get; set; }
 }

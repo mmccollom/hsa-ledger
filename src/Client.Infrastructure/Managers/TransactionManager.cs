@@ -23,6 +23,13 @@ public class TransactionManager : ITransactionManager
         var result = await response.ToResult<IEnumerable<TransactionResponse>>();
         return result;
     }
+    
+    public async Task<IResult<IEnumerable<DocumentResponse>>> GetDocuments(int transactionId)
+    {
+        var response = await _httpClient.GetAsync($"{TransactionEndpoints.GetDocuments}?transactionId={transactionId}");
+        var result = await response.ToResult<IEnumerable<DocumentResponse>>();
+        return result;
+    }
 
     public async Task<IResult<int?>> Put(AddTransactionRequest transactionRequest)
     {

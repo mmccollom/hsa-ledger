@@ -20,6 +20,15 @@ public class TransactionController : ApiControllerBase
         return result;
     }
     
+    [HttpGet]
+    [Route("documents"), Authorize(Roles = "Administrator,Operations")]
+    public async Task<Result<IEnumerable<DocumentResponse>>> GetDocuments(int transactionId)
+    {
+        var query = new GetDocumentByTransactionIdQuery(transactionId);
+        var result = await Mediator.Send(query);
+        return result;
+    }
+    
     [HttpPut]
     [Authorize(Roles = "Administrator,Operations")]
     public async Task<Result<int>> Add(AddTransactionRequest document)

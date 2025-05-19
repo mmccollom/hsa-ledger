@@ -10,4 +10,5 @@ public class AddTransactionRequest
     public bool IsPaid { get; set; }
     public bool IsHsaWithdrawn { get; set; }
     public bool IsAudited { get; set; }
+    public List<AddDocumentRequest>? Documents { get; set; }
 }
