@@ -8,10 +8,10 @@
   "profile": "",
   "region": "us-east-2",
   "configuration": "Release",
-  "function-name": "peap_ercot_tradable_anc_calc",
-  "function-description": "(PEAP) Calculate Tradable Ancillaries",
-  "function-runtime": "dotnet6",
+  "function-name": "extract_email_attachments",
+  "function-description": "Extract email attachments and upload to WebApi",
+  "function-runtime": "dotnet8",
   "function-memory-size": 256,
   "function-timeout": 300,
-  "function-handler": "ErcotAncillaryCalculation::ErcotAncillaryCalculation.Function::FunctionHandler"
+  "function-handler": "HsaLedger.Lambda.EmailReader::HsaLedger.Lambda.EmailReader.Function::FunctionHandler"
 }
