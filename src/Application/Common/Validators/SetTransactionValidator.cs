@@ -12,8 +12,7 @@ public class SetTransactionValidator : AbstractValidator<SetTransactionCommand>
         RuleFor(x => x.TransactionRequest.Date)
             .NotEmpty();
         RuleFor(x => x.TransactionRequest.Amount)
-            .NotEmpty()
-            .NotEmpty().Must(x => Math.Round(x * 100) == x * 100)
+            .Must(x => Math.Round(x * 100) == x * 100)
             .WithMessage("Must not have more than 2 decimal places");
         RuleFor(x => x.TransactionRequest)
             .MustAsync(async (v, cancellationToken) =>
