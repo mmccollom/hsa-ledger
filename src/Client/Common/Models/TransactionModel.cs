@@ -7,11 +7,16 @@ public class TransactionModel
 {
     public int TransactionId { get; set; }
     public int TransactionTypeId { get; set; }
-    public virtual TransactionTypeModel TransactionType { get; set; } = null!;
+    public TransactionTypeModel TransactionType { get; set; } = null!;
     public int ProviderId { get; set; }
-    public virtual ProviderModel Provider { get; set; } = null!;
+    public ProviderModel Provider { get; set; } = null!;
     public int? PersonId { get; set; }
-    public virtual PersonModel? Person { get; set; }
+    public PersonModel? Person { get; set; }
+
+    public string GetPersonName()
+    {
+        return Person?.Name ?? string.Empty;
+    }
     public DateTime? Date { get; set; }
     public decimal Amount { get; set; }
     public bool IsPaid { get; set; }

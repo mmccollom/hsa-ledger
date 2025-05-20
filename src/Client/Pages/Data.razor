@@ -44,7 +44,7 @@
             </EditTemplate>
         </PropertyColumn>
         @* ReSharper disable once CSharpWarnings::CS8602 *@
-        <PropertyColumn Property="x => x.Person.Name" Title="Person">
+        <PropertyColumn Property="x => x.GetPersonName()" Title="Person">
             <EditTemplate>
                 <MudSelect T="PersonModel" ToStringFunc="_personConverter" @bind-Value="context.Item.Person" 
                            Margin="@Margin.Dense" Label="Person" Variant="Variant.Outlined">
