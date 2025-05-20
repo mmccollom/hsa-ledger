@@ -8,10 +8,12 @@
   "profile": "",
   "region": "us-east-2",
   "configuration": "Release",
+  "template": "serverless.template",
+  "template-parameters": "",
+  "docker-host-build-output-dir": "./bin/Release/lambda-publish",
   "function-name": "extract_email_attachments",
   "function-description": "Extract email attachments and upload to WebApi",
   "function-runtime": "dotnet8",
   "function-memory-size": 256,
-  "function-timeout": 300,
-  "function-handler": "HsaLedger.Lambda.EmailReader::HsaLedger.Lambda.EmailReader.Function::FunctionHandler"
+  "function-timeout": 300
 }

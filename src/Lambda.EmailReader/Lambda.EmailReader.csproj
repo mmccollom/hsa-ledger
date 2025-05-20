@@ -5,11 +5,24 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>HsaLedger.Lambda.EmailReader</RootNamespace>
+        <AssemblyName>HsaLedger.Lambda.EmailReader</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Lambda.Infrastructure\Lambda.Infrastructure.csproj" />
       <ProjectReference Include="..\Client.Infrastructure\Client.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Amazon.Lambda.S3Events" Version="3.1.0" />
+      <PackageReference Include="MimeKit" Version="4.12.0" />
+      <PackageReference Include="Amazon.Lambda.Core" Version="2.5.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

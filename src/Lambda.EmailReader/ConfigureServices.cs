@@ -1,4 +1,3 @@
-using Amazon.Lambda.Core;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,14 +5,13 @@ namespace HsaLedger.Lambda.EmailReader;
 
 internal static class ConfigureServices
 {
-    internal static async Task<IServiceProvider> InitializeContainer(this ILambdaContext context)
+    internal static void AddLambdaServices(this IServiceCollection services)
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(context.Logger);
+        // Register AWS services
+        services.AddAWSService<Amazon.S3.IAmazonS3>();
+        
+        // Add API Managers
         services.AddManagers();
-
-        // add infrastructure services
-        return await Infrastructure.ConfigureServices.InitializeContainer(services);
     }
     
     private static void AddManagers(this IServiceCollection services)

@@ -3,47 +3,41 @@ using HsaLedger.Application.Requests.Identity;
 using HsaLedger.Lambda.Infrastructure.Auth;
 using HsaLedger.Lambda.Infrastructure.Models;
 using HsaLedger.Lambda.Infrastructure.Services;
+using HsaLedger.Shared.Common.Constants.HttpClient;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HsaLedger.Lambda.Infrastructure;
 
 public static class ConfigureServices
 {
-    public static async Task<IServiceProvider> InitializeContainer(IServiceCollection services)
+    public static void AddInfrastructureServices(this IServiceCollection services, string url)
     {
-        services.AddScoped<IAuthenticationManager, AuthenticationManager>();
-        services.AddTransient<AuthenticationHandler>();
-        
-        var secrets = await GetServiceSecrets();
-        
-        const string clientName = "HSA Ledger";
-        services.AddHttpClient(clientName, client =>
+        services.AddHttpClient(HttpClientConstants.DefaultClientName, client =>
         {
             client.DefaultRequestHeaders.AcceptLanguage.Clear();
             client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(CultureInfo.DefaultThreadCurrentCulture
                 ?.TwoLetterISOLanguageName);
-            client.BaseAddress = new Uri(secrets.ApiUrl!);
+            client.BaseAddress = new Uri(url);
         }).AddHttpMessageHandler<AuthenticationHandler>();
         
-        var provider = services.BuildServiceProvider();
-        var authManager = provider.GetRequiredService<IAuthenticationManager>();
-        await authManager.Login(new LoginRequest { Username = secrets.Username!, Password = secrets.Password!});
-
-        return provider;
-    }
-    
-    private static async Task<ServiceSecrets> GetServiceSecrets()
-    {
-        // get api credentials from AWS secrets
-        const string secretName = "hsa-service-secrets";
-        const string region = "us-east-2";
-        var secrets = await AwsSecretService.AwsConfigurationFromSecret<ServiceSecrets>(secretName, region);
-
-        if (secrets?.Username == null || secrets.Password == null || secrets.ApiUrl == null)
+        services.AddHttpClient(HttpClientConstants.AuthHttpClientName,client =>
         {
-            throw new NullReferenceException("Null secret values");
-        }
+            client.DefaultRequestHeaders.AcceptLanguage.Clear();
+            client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(CultureInfo.DefaultThreadCurrentCulture
+                ?.TwoLetterISOLanguageName);
+            client.BaseAddress = new Uri(url);
+        });
         
-        return secrets;
+        // Provide the configured named client as the default HttpClient
+        services.AddScoped(sp =>
+        {
+            var factory = sp.GetRequiredService<IHttpClientFactory>();
+            return factory.CreateClient(HttpClientConstants.DefaultClientName);
+        });
+
+        var tokenHolder = new TokenHolder();
+        services.AddSingleton(tokenHolder);
+        services.AddScoped<IAuthenticationManager, AuthenticationManager>();
+        services.AddTransient<AuthenticationHandler>();
     }
 }
