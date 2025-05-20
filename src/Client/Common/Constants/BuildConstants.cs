@@ -1,4 +1,4 @@
-namespace HsaLedger.Client.Common;
+namespace HsaLedger.Client.Common.Constants;
 
 internal class BuildConstants
 {

@@ -1,7 +1,7 @@
 using HsaLedger.Application.Responses.Projections;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace HsaLedger.Client.Common;
+namespace HsaLedger.Client.Common.Models;
 
 public class TransactionModel
 {

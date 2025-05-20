@@ -1,4 +1,5 @@
 using HsaLedger.Client.Common;
+using HsaLedger.Client.Common.Extensions;
 using HsaLedger.Client.Dialogs;
 using HsaLedger.Shared.Common.Constants.Permission;
 using Microsoft.AspNetCore.Components;

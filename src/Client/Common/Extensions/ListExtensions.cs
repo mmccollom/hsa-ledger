@@ -1,4 +1,4 @@
-namespace HsaLedger.Client.Common;
+namespace HsaLedger.Client.Common.Extensions;
 
 public static class ListExtensions
 {

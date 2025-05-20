@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace HsaLedger.Client.Common;
+namespace HsaLedger.Client.Common.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
