@@ -1,8 +1,6 @@
 using System.Globalization;
-using HsaLedger.Application.Requests.Identity;
 using HsaLedger.Lambda.Infrastructure.Auth;
 using HsaLedger.Lambda.Infrastructure.Models;
-using HsaLedger.Lambda.Infrastructure.Services;
 using HsaLedger.Shared.Common.Constants.HttpClient;
 using Microsoft.Extensions.DependencyInjection;
 

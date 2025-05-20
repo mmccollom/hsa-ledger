@@ -1,5 +1,3 @@
-using HsaLedger.Application.Responses.Projections;
-
 namespace HsaLedger.Client.Common;
 
 public class NewTransactionTypeModel

@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using HsaLedger.Domain.Common.Model;
-using HsaLedger.Domain.Entities;
 
 namespace HsaLedger.Application.Responses.Projections;
 
