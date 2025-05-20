@@ -24,7 +24,6 @@ public class AuthenticationManager : IAuthenticationManager
 
     public async Task<IResult> Login(LoginRequest loginRequest)
     {
-        Console.WriteLine(_httpClient.BaseAddress?.ToString());
         var response = await _httpClient.PostAsJsonAsync(LoginEndpoint, loginRequest);
         var result = await response.ToResult<AuthResponse>();
         if (result.Succeeded)
