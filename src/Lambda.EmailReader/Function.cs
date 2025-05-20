@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using Amazon.S3;
@@ -63,9 +62,6 @@ public class Function
 
     public async Task FunctionHandler(S3Event s3Event, ILambdaContext context)
     {
-        // start stop watch timer
-        var stopWatch = Stopwatch.StartNew();
-        
         // get providers
         var providers = await _providerManager.Get();
 
@@ -203,9 +199,5 @@ public class Function
                 }
             }
         }
-
-        // stop timer and log completion
-        stopWatch.Stop();
-        context.Logger.LogInformation($"Completed in {stopWatch.ElapsedMilliseconds}ms");
     }
 }
