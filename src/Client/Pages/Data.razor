@@ -158,7 +158,7 @@
 
 @code {
     private const string DataGridTitle = "Data";
-    private MudDataGrid<TransactionModel> _dataGrid = null!;
+    private MudDataGrid<TransactionModel>? _dataGrid;
     private DataLoadState<TransactionModel> _dataState = new();
     private List<ProviderModel> _providers = new();
     private List<TransactionTypeModel> _transactionTypes = new();
@@ -314,7 +314,7 @@
     
     private async Task ExportFiltered()
     {
-        var filtered = _dataGrid.FilteredItems;
+        var filtered = _dataGrid!.FilteredItems;
 
         var encodedByteArray = await _clientExcelService.ExportAsync(
             filtered,
