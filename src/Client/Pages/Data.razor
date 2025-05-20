@@ -6,8 +6,8 @@
 @using HsaLedger.Client.Dialogs
 
 <PageTitle>HSA | Data</PageTitle>
-<MudDataGrid T="TransactionModel" @ref="_dataGrid" Items="@_dataState.Items" Loading="@_dataState.IsLoading"
-             SortMode="SortMode.Multiple" Filterable="true" Dense="true"
+<MudDataGrid T="TransactionModel" @ref="_dataGrid" MultiSelection="true" Items="@_dataState.Items"
+             Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true" Dense="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
              CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
     <ToolBarContent>
@@ -15,10 +15,13 @@
         <MudSpacer />
         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Color="Color.Success"
                    Size="Size.Small" Style="margin-left:1em;" OnClick="ShowAddDialog">Add</MudButton>
+        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Info"
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="ShowEditDialog">Edit</MudButton>
         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Download" Color="Color.Success"
                    Size="Size.Small" Style="margin-left:1em;" OnClick="ExportFiltered">Export</MudButton>
     </ToolBarContent>
     <Columns>
+        <SelectColumn T="TransactionModel" />
         <PropertyColumn Property="x => x.TransactionId" Title="ID" Editable="false"/>
         <PropertyColumn Property="x => x.TransactionType.Code" Title="Type">
             <EditTemplate>
@@ -111,7 +114,6 @@
                 <MudCheckBox @bind-Value="context.Item.IsAudited" Label="Audited" Color="Color.Primary"/>
             </EditTemplate>
         </PropertyColumn>
-        
         <PropertyColumn Property="x => x.GetDocumentNames()" Title="Documents">
             <EditTemplate>
                 <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".jpg, .png, .pdf" FilesChanged="x => AddToPendingUpload(x, context.Item)" MaximumFileCount="100">
@@ -125,10 +127,8 @@
                 </MudFileUpload>
             </EditTemplate>
         </PropertyColumn>
-        
         <PropertyColumn Property="x => x.LastUpdatedBy" Title="Updated By" Editable="false"/>
         <PropertyColumn Property="x => x.LastUpdatedTime" Title="Updated" Format="MM/dd/yyyy" Editable="false"/>
-
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
                 <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Download" OnClick="() => DownloadDocuments(context.Item)" Disabled="!context.Item.IsDocumentAvailable"/>
@@ -230,6 +230,58 @@
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
                 "Deletion successful",
                 AlertHelper.DeleteFallbackErrorMessage,
+                Load);
+        }
+    }
+
+    private async Task ShowEditDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        
+        var parameters = new DialogParameters
+        {
+            {nameof(AddTransaction.Providers), _providers},
+            {nameof(AddTransaction.TransactionTypes), _transactionTypes},
+            {nameof(AddTransaction.Persons), _persons},
+        };
+        
+        var dialog = await _dialogService.ShowAsync<EditTransactionInMass>("", parameters, options);
+
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult == null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var data = dialogResult.Data;
+
+        if (data is EditTransactionModel model)
+        {
+            var selectedItems = _dataGrid!.SelectedItems;
+
+            var setRequests = selectedItems.Select(item =>
+            {
+                var setTransactionRequest = new SetTransactionRequest
+                {
+                    TransactionId = item.TransactionId,
+                    TransactionTypeId = model.TransactionType?.TransactionTypeId ?? item.TransactionTypeId,
+                    ProviderId = model.Provider?.ProviderId ?? item.ProviderId,
+                    PersonId = model.Person?.PersonId ?? item.PersonId,
+                    Date = model.Date ?? item.Date ?? DateTime.MaxValue,
+                    Amount = model.IsAmountDirty ? model.Amount : item.Amount,
+                    IsPaid = model.IsPaid ?? item.IsPaid,
+                    IsHsaWithdrawn = model.IsHsaWithdrawn ?? item.IsHsaWithdrawn,
+                    IsAudited = model.IsAudited ?? item.IsAudited
+                };
+                return setTransactionRequest;
+            }).ToList();
+
+            var result = await _transactionManager.Post(setRequests);
+            
+            await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
+                "Update successful",
+                AlertHelper.AddFallbackErrorMessage,
                 Load);
         }
     }
@@ -426,7 +478,9 @@
 
         var data = result.Data?
             .Select(TransactionModel.FromTransactionTypeResponse)
-            .OrderBy(x => x.TransactionId).ToList();
+            .OrderByDescending(x => x.Date)
+            .ThenByDescending(x => x.TransactionId)
+            .ToList();
         
         return data;
     }

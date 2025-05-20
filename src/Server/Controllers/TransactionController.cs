@@ -31,9 +31,9 @@ public class TransactionController : ApiControllerBase
     
     [HttpPut]
     [Authorize(Roles = "Administrator,Operations,Service")]
-    public async Task<Result<int>> Add(AddTransactionRequest document)
+    public async Task<Result<int>> Add(AddTransactionRequest transaction)
     {
-        var command = new AddTransactionCommand(document);
+        var command = new AddTransactionCommand(transaction);
         var result = await Mediator.Send(command);
         return result;
     }
@@ -49,9 +49,18 @@ public class TransactionController : ApiControllerBase
     
     [HttpPost]
     [Authorize(Roles = "Administrator,Operations")]
-    public async Task<Result<int>> Set(SetTransactionRequest document)
+    public async Task<Result<int>> Set(SetTransactionRequest transaction)
     {
-        var command = new SetTransactionCommand(document);
+        var command = new SetTransactionCommand(transaction);
+        var result = await Mediator.Send(command);
+        return result;
+    }
+    
+    [HttpPost]
+    [Route("MassUpdate"), Authorize(Roles = "Administrator,Operations")]
+    public async Task<Result<int>> SetInMass(List<SetTransactionRequest> transactions)
+    {
+        var command = new SetTransactionMassCommand(transactions);
         var result = await Mediator.Send(command);
         return result;
     }

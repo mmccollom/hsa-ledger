@@ -10,5 +10,6 @@ public interface ITransactionManager : IManager
     Task<IResult<IEnumerable<DocumentResponse>>> GetDocuments(int transactionId);
     Task<IResult<int?>> Put(AddTransactionRequest transactionRequest);
     Task<IResult<int?>> Post(SetTransactionRequest transactionRequest);
+    Task<IResult<int?>> Post(List<SetTransactionRequest> transactionRequests);
     Task<IResult<int?>> Delete(int transactionId);
 }

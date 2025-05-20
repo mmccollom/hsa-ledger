@@ -1,9 +1,8 @@
-@using FluentValidation
 @using HsaLedger.Client.Common.Models
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
     <DialogContent>
-        <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+        <MudForm Model="@_model" @ref="@_form">
             <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
             <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
                        @bind-Value="_model.TransactionType"
@@ -42,15 +41,6 @@
             <MudCheckBox @bind-Value="_model.IsPaid" Label="Paid" Color="Color.Primary" />
             <MudCheckBox @bind-Value="_model.IsHsaWithdrawn" Label="HSA Withdrawn" Color="Color.Primary" />
             <MudCheckBox @bind-Value="_model.IsAudited" Label="Audited" Color="Color.Primary" />
-            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".jpg, .png, .pdf" FilesChanged="AddToPendingUpload" MaximumFileCount="100">
-                <ActivatorContent>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.CloudUpload">
-                        Upload documentation
-                    </MudButton>
-                </ActivatorContent>
-            </MudFileUpload>
         </MudForm>
     </DialogContent>
     <DialogActions>
@@ -65,16 +55,10 @@
     [Parameter] public IEnumerable<PersonModel>? Persons { get; set; }
 
     private MudForm? _form;
-    private readonly NewTransactionModel _model = new();
-    private readonly NewTransactionModelFluentValidator _validator = new();
+    private readonly EditTransactionModel _model = new();
     private readonly Func<ProviderModel?,string> _providerConverter = a => a?.Name ?? "";
     private readonly Func<TransactionTypeModel?,string> _transactionTypeConverter = a => a?.Code ?? "";
     private readonly Func<PersonModel?,string> _personConverter = a => a?.Name ?? "";
-    
-    private void AddToPendingUpload(IReadOnlyList<IBrowserFile>? files)
-    {
-        _model.FilesPendingUpload = new List<IBrowserFile>(files ?? []);
-    }
     
     private void Cancel() => MudDialog.Cancel();
     private async Task SubmitAsync()
@@ -85,27 +69,5 @@
         {
             MudDialog.Close(DialogResult.Ok(_model));
         }
-    }
-
-    
-    public class NewTransactionModelFluentValidator : AbstractValidator<NewTransactionModel>
-    {
-        public NewTransactionModelFluentValidator()
-        {
-            RuleFor(x => x.TransactionType)
-                .NotNull();
-            RuleFor(x => x.Provider)
-                .NotNull();
-            RuleFor(x => x.Amount)
-                .NotEmpty();
-            RuleFor(x => x.Date)
-                .NotEmpty();
-        }
-
-        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
-        {
-            var result = await ValidateAsync(ValidationContext<NewTransactionModel>.CreateWithOptions((NewTransactionModel)model, x => x.IncludeProperties(propertyName)));
-            return result.IsValid ? [] : result.Errors.Select(e => e.ErrorMessage);
-        };
     }
 }

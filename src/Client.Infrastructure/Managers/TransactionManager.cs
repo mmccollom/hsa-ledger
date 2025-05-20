@@ -45,6 +45,13 @@ public class TransactionManager : ITransactionManager
         return result;
     }
 
+    public async Task<IResult<int?>> Post(List<SetTransactionRequest> transactionRequests)
+    {        
+        var response = await _httpClient.PostAsJsonAsync(TransactionEndpoints.MassUpdate, transactionRequests);
+        var result = await response.ToResult<int?>();
+        return result;
+    }
+
     public async Task<IResult<int?>> Delete(int transactionId)
     {
         var response = await _httpClient.DeleteAsync($"{TransactionEndpoints.Delete}/{transactionId}");
