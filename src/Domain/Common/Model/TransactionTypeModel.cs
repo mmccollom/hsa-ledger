@@ -33,7 +33,7 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
             {
                 Code = x.Code,
                 Description = x.Description,
-                Providers = new HashSet<ProviderModel>(x.Providers.AsQueryable().Select(ProviderModel.Projection)),
+                Providers = x.Providers.AsQueryable().Select(ProviderModel.Projection).ToList(),
                 AllowDelete = x.Transactions.Count == 0,
                 CreatedTime = x.CreatedTime,
                 CreatedBy = x.CreatedBy,
