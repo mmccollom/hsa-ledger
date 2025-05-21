@@ -1,9 +1,9 @@
 @page "/provider"
 @using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
-@using HsaLedger.Domain.Common.Model
 
 <PageTitle>HSA | Provider</PageTitle>
 <MudDataGrid T="ProviderModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"

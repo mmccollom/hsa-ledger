@@ -1,8 +1,8 @@
 using HsaLedger.Application.Mediator.Commands;
 using HsaLedger.Application.Mediator.Queries;
 using HsaLedger.Application.Requests;
+using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Projections;
-using HsaLedger.Domain.Common.Model;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

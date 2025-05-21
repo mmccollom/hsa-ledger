@@ -12,10 +12,10 @@ namespace HsaLedger.Server.Controllers;
 public class DocumentController : ApiControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Administrator,Operations")]
-    public async Task<Result<IEnumerable<DocumentResponse>>> Get()
+    [Route("{documentId::int}"), Authorize(Roles = "Administrator,Operations")]
+    public async Task<Result<DocumentResponse>> Get(int documentId)
     {
-        var query = new GetDocumentQuery();
+        var query = new GetDocumentQuery(documentId);
         var result = await Mediator.Send(query);
         return result;
     }

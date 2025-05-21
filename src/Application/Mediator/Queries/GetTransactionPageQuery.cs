@@ -5,8 +5,8 @@ using HsaLedger.Shared.Wrapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
+using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Pagination;
-using HsaLedger.Domain.Common.Model;
 
 namespace HsaLedger.Application.Mediator.Queries;
 

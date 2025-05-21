@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace HsaLedger.Domain.Common.Model;
+namespace HsaLedger.Application.Responses.Models;
 
 public class PersonModel
 {
@@ -13,7 +13,7 @@ public class PersonModel
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
     
-    public static Expression<Func<Entities.Person, PersonModel>> Projection
+    public static Expression<Func<Domain.Entities.Person, PersonModel>> Projection
     {
         get
         {
@@ -31,7 +31,7 @@ public class PersonModel
         }
     }
     
-    public static PersonModel FromEntity(Entities.Person entity)
+    public static PersonModel FromEntity(Domain.Entities.Person entity)
     {
         return Projection.Compile().Invoke(entity);
     }

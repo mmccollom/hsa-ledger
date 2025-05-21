@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace HsaLedger.Domain.Common.Model;
+namespace HsaLedger.Application.Responses.Models;
 
 public class TransactionTypeModel : IEquatable<TransactionTypeModel>
 {
@@ -25,7 +25,7 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
         return providers.Length > 100 ? string.Concat(providers.AsSpan(0, 100), "...") : providers;
     }
 
-    public static Expression<Func<Entities.TransactionType, TransactionTypeModel>> Projection
+    public static Expression<Func<Domain.Entities.TransactionType, TransactionTypeModel>> Projection
     {
         get
         {
@@ -44,7 +44,7 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
         }
     }
     
-    public static TransactionTypeModel FromEntity(Entities.TransactionType entity)
+    public static TransactionTypeModel FromEntity(Domain.Entities.TransactionType entity)
     {
         return Projection.Compile().Invoke(entity);
     }

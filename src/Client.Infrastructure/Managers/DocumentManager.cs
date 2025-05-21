@@ -17,10 +17,10 @@ public class DocumentManager : IDocumentManager
         _httpClient = httpClient;
     }
 
-    public async Task<IResult<IEnumerable<DocumentResponse>>> Get()
+    public async Task<IResult<DocumentResponse>> Get(int documentId)
     {
-        var response = await _httpClient.GetAsync(DocumentEndpoints.Get);
-        var result = await response.ToResult<IEnumerable<DocumentResponse>>();
+        var response = await _httpClient.GetAsync($"{DocumentEndpoints.Get}/{documentId}");
+        var result = await response.ToResult<DocumentResponse>();
         return result;
     }
 

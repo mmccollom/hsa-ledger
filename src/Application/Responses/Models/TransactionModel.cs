@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace HsaLedger.Domain.Common.Model;
+namespace HsaLedger.Application.Responses.Models;
 
 public class TransactionModel
 {
@@ -33,14 +33,14 @@ public class TransactionModel
 
     public string GetDocumentNames()
     {
-        var documents = string.Join(",", Documents.Select(t => t.Name));
+        var documents = string.Join(",", Documents.Select(t => t.Fullname));
         return documents.Length > 100 ? string.Concat(documents.AsSpan(0, 100), "...") : documents;
     }
     
     public List<IBrowserFile>? FilesPendingUpload { get; set; }
     public bool IsPendingUpload { get; set; }
 
-    public static Expression<Func<Entities.Transaction, TransactionModel>> Projection
+    public static Expression<Func<Domain.Entities.Transaction, TransactionModel>> Projection
     {
         get
         {

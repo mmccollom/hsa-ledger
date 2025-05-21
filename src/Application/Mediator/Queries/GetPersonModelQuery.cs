@@ -1,5 +1,5 @@
 using HsaLedger.Application.Common.Interfaces;
-using HsaLedger.Domain.Common.Model;
+using HsaLedger.Application.Responses.Models;
 using HsaLedger.Shared.Wrapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

@@ -6,12 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HsaLedger.Application.Mediator.Queries;
 
-public class GetDocumentQuery : IRequest<Result<IEnumerable<DocumentResponse>>>
+public class GetDocumentQuery : IRequest<Result<DocumentResponse>>
 {
-    
+    public GetDocumentQuery(int documentId)
+    {
+        DocumentId = documentId;
+    }
+
+    public int DocumentId { get; set; }
 }
 
-public class GetDocumentQueryHandler : IRequestHandler<GetDocumentQuery, Result<IEnumerable<DocumentResponse>>>
+public class GetDocumentQueryHandler : IRequestHandler<GetDocumentQuery, Result<DocumentResponse>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -20,13 +25,14 @@ public class GetDocumentQueryHandler : IRequestHandler<GetDocumentQuery, Result<
         _context = context;
     }
 
-    public async Task<Result<IEnumerable<DocumentResponse>>> Handle(GetDocumentQuery request, CancellationToken cancellationToken)
+    public async Task<Result<DocumentResponse>> Handle(GetDocumentQuery request, CancellationToken cancellationToken)
     {
         var data = await _context.Documents
+            .Where(x => x.DocumentId == request.DocumentId)
             .AsNoTracking()
             .Select(DocumentResponse.Projection)
-            .ToListAsync(cancellationToken);
+            .FirstAsync(cancellationToken);
 
-        return await Result<IEnumerable<DocumentResponse>>.SuccessAsync(data);
+        return await Result<DocumentResponse>.SuccessAsync(data);
     }
 }

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace HsaLedger.Domain.Common.Model;
+namespace HsaLedger.Application.Responses.Models;
 
 public class DocumentModel
 {
@@ -9,14 +9,14 @@ public class DocumentModel
     public required string Fullname { get; set; }
     public required string Name { get; set; }
     public required string Extension { get; set; }
-    public required byte[] Content { get; set; }
+    //public required byte[] Content { get; set; } // Not needed in the model
     public DateTime CreatedTime { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? LastUpdatedTime { get; set; }
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
     
-    public static Expression<Func<Entities.Document, DocumentModel>> Projection
+    public static Expression<Func<Domain.Entities.Document, DocumentModel>> Projection
     {
         get
         {
@@ -27,7 +27,7 @@ public class DocumentModel
                 Fullname = x.Fullname,
                 Name = x.Name,
                 Extension = x.Extension,
-                Content = x.Content,
+                //Content = x.Content,
                 CreatedTime = x.CreatedTime,
                 CreatedBy = x.CreatedBy,
                 LastUpdatedTime = x.LastUpdatedTime,

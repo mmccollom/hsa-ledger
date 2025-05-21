@@ -1,6 +1,6 @@
 using HsaLedger.Application.Requests;
+using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Projections;
-using HsaLedger.Domain.Common.Model;
 using HsaLedger.Shared.Wrapper;
 
 namespace HsaLedger.Client.Infrastructure.Managers.Interfaces;

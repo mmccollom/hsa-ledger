@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace HsaLedger.Domain.Common.Model;
+namespace HsaLedger.Application.Responses.Models;
 
 public class ProviderModel : IEquatable<ProviderModel>
 {
@@ -18,7 +18,7 @@ public class ProviderModel : IEquatable<ProviderModel>
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
 
-    public static Expression<Func<Entities.Provider, ProviderModel>> Projection
+    public static Expression<Func<Domain.Entities.Provider, ProviderModel>> Projection
     {
         get
         {
@@ -35,7 +35,7 @@ public class ProviderModel : IEquatable<ProviderModel>
         }
     }
     
-    public static ProviderModel FromEntity(Entities.Provider entity)
+    public static ProviderModel FromEntity(Domain.Entities.Provider entity)
     {
         return Projection.Compile().Invoke(entity);
     }

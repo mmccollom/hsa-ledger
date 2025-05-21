@@ -1,9 +1,9 @@
 @page "/transactionType"
 @using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
-@using HsaLedger.Domain.Common.Model
 
 <PageTitle>HSA | Type</PageTitle>
 <MudDataGrid T="TransactionTypeModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"

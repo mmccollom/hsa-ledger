@@ -1,5 +1,6 @@
 @page "/data"
 @using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Extensions
@@ -357,11 +358,16 @@
     {
         foreach (var document in transaction.Documents)
         {
-            await _jsRuntime.InvokeVoidAsync("Download", new
+            var result = await _documentManager.Get(document.DocumentId);
+
+            if (result is { Succeeded: true, Data: not null })
             {
-                ByteArray = Convert.ToBase64String(document.Content),
-                FileName = document.Fullname
-            });
+                await _jsRuntime.InvokeVoidAsync("Download", new
+                {
+                    ByteArray = Convert.ToBase64String(result.Data!.Content),
+                    FileName = document.Fullname
+                });
+            }
         }
     }
     

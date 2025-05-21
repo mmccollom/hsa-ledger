@@ -1,4 +1,4 @@
-using HsaLedger.Domain.Common.Model;
+using HsaLedger.Application.Responses.Models;
 
 namespace HsaLedger.Client.Common.Models;
 
