@@ -1,6 +1,6 @@
-using HsaLedger.Application.Responses.Projections;
+using System.Linq.Expressions;
 
-namespace HsaLedger.Client.Common.Models;
+namespace HsaLedger.Domain.Common.Model;
 
 public class TransactionTypeModel : IEquatable<TransactionTypeModel>
 {
@@ -25,20 +25,28 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
         return providers.Length > 100 ? string.Concat(providers.AsSpan(0, 100), "...") : providers;
     }
 
-    public static TransactionTypeModel FromTransactionTypeResponse(TransactionTypeResponse response)
+    public static Expression<Func<Entities.TransactionType, TransactionTypeModel>> Projection
     {
-        return new TransactionTypeModel(response.TransactionTypeId)
+        get
         {
-            Code = response.Code,
-            Description = response.Description,
-            Providers = new HashSet<ProviderModel>(response.Providers.Select(ProviderModel.FromProviderResponse)),
-            AllowDelete = response.AllowDelete,
-            CreatedTime = response.CreatedTime,
-            CreatedBy = response.CreatedBy,
-            LastUpdatedTime = response.LastUpdatedTime,
-            LastUpdatedBy = response.LastUpdatedBy,
-            LockId = response.LockId,
-        };
+            return x => new TransactionTypeModel(x.TransactionTypeId)
+            {
+                Code = x.Code,
+                Description = x.Description,
+                Providers = new HashSet<ProviderModel>(x.Providers.AsQueryable().Select(ProviderModel.Projection)),
+                AllowDelete = x.Transactions.Count == 0,
+                CreatedTime = x.CreatedTime,
+                CreatedBy = x.CreatedBy,
+                LastUpdatedTime = x.LastUpdatedTime,
+                LastUpdatedBy = x.LastUpdatedBy,
+                LockId = x.LockId,
+            };
+        }
+    }
+    
+    public static TransactionTypeModel FromEntity(Entities.TransactionType entity)
+    {
+        return Projection.Compile().Invoke(entity);
     }
 
     public bool Equals(TransactionTypeModel? other)

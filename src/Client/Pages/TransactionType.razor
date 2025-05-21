@@ -3,6 +3,7 @@
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
+@using HsaLedger.Domain.Common.Model
 
 <PageTitle>HSA | Type</PageTitle>
 <MudDataGrid T="TransactionTypeModel" Items="@_dataState.Items" Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true"
@@ -180,10 +181,9 @@
 
     private async Task<List<TransactionTypeModel>?> GetData()
     {
-        var result = await _transactionTypeManager.Get();
+        var result = await _transactionTypeManager.GetUiModel();
 
         var data = result.Data?
-            .Select(TransactionTypeModel.FromTransactionTypeResponse)
             .OrderBy(x => x.TransactionTypeId).ToList();
         
         return data;
@@ -191,10 +191,9 @@
 
     private async Task<List<ProviderModel>?> GetProviders()
     {
-        var result = await _providerManager.Get();
+        var result = await _providerManager.GetUiModel();
 
         var data = result.Data?
-            .Select(ProviderModel.FromProviderResponse)
             .OrderBy(x => x.ProviderId).ToList();
         return data;
     }

@@ -1,9 +1,9 @@
 @using HsaLedger.Client.Common.Models
+@using HsaLedger.Domain.Common.Model
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
     <DialogContent>
         <MudForm Model="@_model" @ref="@_form">
-            <MudTextField Variant="Variant.Outlined" T="string" Disabled="true" Label="Id"/>
             <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
                        @bind-Value="_model.TransactionType"
                        Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">

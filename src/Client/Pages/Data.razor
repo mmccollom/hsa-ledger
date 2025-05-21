@@ -4,10 +4,11 @@
 @using HsaLedger.Client.Common.Extensions
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
+@using HsaLedger.Domain.Common.Model
 
 <PageTitle>HSA | Data</PageTitle>
-<MudDataGrid T="TransactionModel" @ref="_dataGrid" MultiSelection="true" Items="@_dataState.Items"
-             Loading="@_dataState.IsLoading" SortMode="SortMode.Multiple" Filterable="true" Dense="true"
+<MudDataGrid T="TransactionModel" @ref="_dataGrid" MultiSelection="true" ServerData="LoadServerData"
+             SortMode="SortMode.Single" Filterable="true" Dense="true"
              EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
              CommittedItemChanges="@CommittedItemChanges" ReadOnly="false">
     <ToolBarContent>
@@ -22,7 +23,6 @@
     </ToolBarContent>
     <Columns>
         <SelectColumn T="TransactionModel" />
-        <PropertyColumn Property="x => x.TransactionId" Title="ID" Editable="false"/>
         <PropertyColumn Property="x => x.TransactionType.Code" Title="Type">
             <EditTemplate>
                 <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
@@ -137,20 +137,6 @@
             </CellTemplate>
         </TemplateColumn>
     </Columns>
-    <NoRecordsContent>
-        @if (_dataState.IsLoading)
-        {
-            <MudText Typo="Typo.subtitle2">Loading...</MudText>
-        }
-        else if (_dataState.HasError)
-        {
-            <MudText Typo="Typo.subtitle2" Color="Color.Error">@_dataState.ErrorMessage</MudText>
-        }
-        else
-        {
-            <MudText Typo="Typo.subtitle2">No records found.</MudText>
-        }
-    </NoRecordsContent>
     <PagerContent>
         <MudDataGridPager T="TransactionModel" />
     </PagerContent>
@@ -159,7 +145,6 @@
 @code {
     private const string DataGridTitle = "Data";
     private MudDataGrid<TransactionModel>? _dataGrid;
-    private DataLoadState<TransactionModel> _dataState = new();
     private List<ProviderModel> _providers = new();
     private List<TransactionTypeModel> _transactionTypes = new();
     private List<PersonModel> _persons = new();
@@ -174,34 +159,62 @@
 
     private async Task Load()
     {
-        try
-        {
-            // Start loading
-            _dataState.IsLoading = true;
-            _dataState.HasError = false;
-
-            // Load your data
-            var transactions = await GetData();
-            var providers = await GetProviders();
-            var transactionTypes = await GetTransactionTypes();
-            var persons = await GetPersons();
-            _providers = providers ?? [];
-            _transactionTypes = transactionTypes ?? [];
-            _persons = persons ?? [];
-            
-            _dataState.Items = transactions ?? [];            
-        }
-        catch (Exception ex)
-        {
-            _dataState.HasError = true;
-            _dataState.ErrorMessage = ex.Message;
-        }
-        finally
-        {
-            _dataState.IsLoading = false;
-        }
+        var providers = await GetProviders();
+        var transactionTypes = await GetTransactionTypes();
+        var persons = await GetPersons();
+        _providers = providers ?? [];
+        _transactionTypes = transactionTypes ?? [];
+        _persons = persons ?? [];
     }
+    
+    private async Task<GridData<TransactionModel>> LoadServerData(GridState<TransactionModel> state)
+    {
+        var tablePageRequest = new GridQueryRequest
+        {
+            Page = state.Page,
+            PageSize = state.PageSize,
+            Sorts = state.SortDefinitions.Select(s => new SortDefinition
+            {
+                Property = s.SortBy,
+                Direction = s.Descending ? "Descending" : "Ascending"
+            }).ToList(),
 
+            Filters = state.FilterDefinitions.Select(f => new FilterDefinition
+            {
+                Property = f.Column?.PropertyName ?? string.Empty,
+                Operator = f.Operator ?? "",     // This comes from MudBlazor’s built-in filtering operators
+                Value = f.Value?.ToString()
+            }).ToList()
+        };
+        
+        await Task.Yield();
+        
+        var result = await _transactionManager.GetPaged(tablePageRequest);
+
+        if (!result.Succeeded)
+        {
+            if (result.Messages != null)
+            {
+                _snackBar.Add(string.Join(",", result.Messages), Severity.Error);
+            }
+            else
+            {
+                _snackBar.Add("Error loading data", Severity.Error);
+            }
+            return new GridData<TransactionModel>
+            {
+                TotalItems = 0,
+                Items = new List<TransactionModel>()
+            };
+        }
+        
+        return new GridData<TransactionModel>
+        {
+            Items = result.Data?.Items ?? [],
+            TotalItems = result.Data?.TotalItems ?? 0
+        };
+    }
+    
     private async Task Delete(TransactionModel transaction)
     {
         var parameters = new DialogParameters
@@ -452,7 +465,7 @@
             var documentsResult = await _transactionManager.GetDocuments(item.TransactionId);
             if (documentsResult.Succeeded)
             {
-                item.Documents = documentsResult.Data?.Select(DocumentModel.FromDocumentResponse).ToList() ?? [];
+                item.Documents = documentsResult.Data?.ToList() ?? [];
             }
             else
             {
@@ -472,45 +485,29 @@
         }
     }
 
-    private async Task<List<TransactionModel>?> GetData()
-    {
-        var result = await _transactionManager.Get();
-
-        var data = result.Data?
-            .Select(TransactionModel.FromTransactionTypeResponse)
-            .OrderByDescending(x => x.Date)
-            .ThenByDescending(x => x.TransactionId)
-            .ToList();
-        
-        return data;
-    }
-
     private async Task<List<ProviderModel>?> GetProviders()
     {
-        var result = await _providerManager.Get();
+        var result = await _providerManager.GetUiModel();
 
         var data = result.Data?
-            .Select(ProviderModel.FromProviderResponse)
             .OrderBy(x => x.Name).ToList();
         return data;
     }
 
     private async Task<List<TransactionTypeModel>?> GetTransactionTypes()
     {
-        var result = await _transactionTypeManager.Get();
+        var result = await _transactionTypeManager.GetUiModel();
 
         var data = result.Data?
-            .Select(TransactionTypeModel.FromTransactionTypeResponse)
             .OrderBy(x => x.Code).ToList();
         return data;
     }
 
     private async Task<List<PersonModel>?> GetPersons()
     {
-        var result = await _personManager.Get();
+        var result = await _personManager.GetUiModel();
 
         var data = result.Data?
-            .Select(PersonModel.FromPersonResponse)
             .OrderBy(x => x.Name).ToList();
         return data;
     }

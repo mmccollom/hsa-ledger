@@ -3,6 +3,7 @@ using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
+using HsaLedger.Domain.Common.Model;
 using HsaLedger.Shared.Common.Extensions;
 using HsaLedger.Shared.Wrapper;
 
@@ -21,6 +22,13 @@ public class PersonManager : IPersonManager
     {
         var response = await _httpClient.GetAsync(PersonEndpoints.Get);
         var result = await response.ToResult<IEnumerable<PersonResponse>>();
+        return result;
+    }
+    
+    public async Task<IResult<IEnumerable<PersonModel>>> GetUiModel()
+    {
+        var response = await _httpClient.GetAsync(PersonEndpoints.GetUiModel);
+        var result = await response.ToResult<IEnumerable<PersonModel>>();
         return result;
     }
 

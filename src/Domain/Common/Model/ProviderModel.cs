@@ -1,6 +1,6 @@
-using HsaLedger.Application.Responses.Projections;
+using System.Linq.Expressions;
 
-namespace HsaLedger.Client.Common.Models;
+namespace HsaLedger.Domain.Common.Model;
 
 public class ProviderModel : IEquatable<ProviderModel>
 {
@@ -18,18 +18,26 @@ public class ProviderModel : IEquatable<ProviderModel>
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
 
-    public static ProviderModel FromProviderResponse(ProviderResponse response)
+    public static Expression<Func<Entities.Provider, ProviderModel>> Projection
     {
-        return new ProviderModel(response.ProviderId)
+        get
         {
-            Name = response.Name,
-            AllowDelete = response.AllowDelete,
-            CreatedTime = response.CreatedTime,
-            CreatedBy = response.CreatedBy,
-            LastUpdatedTime = response.LastUpdatedTime,
-            LastUpdatedBy = response.LastUpdatedBy,
-            LockId = response.LockId,
-        };
+            return x => new ProviderModel(x.ProviderId)
+            {
+                Name = x.Name,
+                AllowDelete = x.Transactions.Count == 0 && x.TransactionTypes.Count == 0,
+                CreatedTime = x.CreatedTime,
+                CreatedBy = x.CreatedBy,
+                LastUpdatedTime = x.LastUpdatedTime,
+                LastUpdatedBy = x.LastUpdatedBy,
+                LockId = x.LockId,
+            };
+        }
+    }
+    
+    public static ProviderModel FromEntity(Entities.Provider entity)
+    {
+        return Projection.Compile().Invoke(entity);
     }
 
     public bool Equals(ProviderModel? other)

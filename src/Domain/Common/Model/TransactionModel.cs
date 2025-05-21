@@ -1,7 +1,7 @@
-using HsaLedger.Application.Responses.Projections;
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace HsaLedger.Client.Common.Models;
+namespace HsaLedger.Domain.Common.Model;
 
 public class TransactionModel
 {
@@ -36,33 +36,36 @@ public class TransactionModel
         var documents = string.Join(",", Documents.Select(t => t.Name));
         return documents.Length > 100 ? string.Concat(documents.AsSpan(0, 100), "...") : documents;
     }
-
+    
     public List<IBrowserFile>? FilesPendingUpload { get; set; }
     public bool IsPendingUpload { get; set; }
 
-    public static TransactionModel FromTransactionTypeResponse(TransactionResponse response)
+    public static Expression<Func<Entities.Transaction, TransactionModel>> Projection
     {
-        return new TransactionModel
+        get
         {
-            TransactionId = response.TransactionId,
-            TransactionTypeId = response.TransactionTypeId,
-            TransactionType = TransactionTypeModel.FromTransactionTypeResponse(response.TransactionType),
-            ProviderId = response.ProviderId,
-            Provider = ProviderModel.FromProviderResponse(response.Provider),
-            PersonId = response.PersonId,
-            Person = response.Person != null ? PersonModel.FromPersonResponse(response.Person) : null,
-            Date = response.Date,
-            Amount = response.Amount,
-            IsPaid = response.IsPaid,
-            IsHsaWithdrawn = response.IsHsaWithdrawn,
-            IsAudited = response.IsAudited,
-            Documents = [..response.Documents.Select(DocumentModel.FromDocumentResponse)],
-            IsDocumentAvailable = response.Documents.Count != 0,
-            AllowDelete = response.AllowDelete,
-            CreatedTime = response.CreatedTime,
-            CreatedBy = response.CreatedBy,
-            LastUpdatedTime = response.LastUpdatedTime,
-            LastUpdatedBy = response.LastUpdatedBy,
-        };
+            return x => new TransactionModel
+            {
+                TransactionId = x.TransactionId,
+                TransactionTypeId = x.TransactionTypeId,
+                TransactionType = TransactionTypeModel.FromEntity(x.TransactionType),
+                ProviderId = x.ProviderId,
+                Provider = ProviderModel.FromEntity(x.Provider),
+                PersonId = x.PersonId,
+                Person = x.Person != null ? PersonModel.FromEntity(x.Person) : null,
+                Date = x.Date,
+                Amount = x.Amount,
+                IsPaid = x.IsPaid,
+                IsHsaWithdrawn = x.IsHsaWithdrawn,
+                IsAudited = x.IsAudited,
+                Documents = x.Documents.AsQueryable().Select(DocumentModel.Projection).ToList(),
+                IsDocumentAvailable = x.Documents.Count != 0,
+                AllowDelete = true,
+                CreatedTime = x.CreatedTime,
+                CreatedBy = x.CreatedBy,
+                LastUpdatedTime = x.LastUpdatedTime,
+                LastUpdatedBy = x.LastUpdatedBy,
+            };
+        }
     }
 }

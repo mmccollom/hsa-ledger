@@ -1,3 +1,4 @@
+using HsaLedger.Domain.Common.Model;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace HsaLedger.Client.Common.Models;

@@ -1,3 +1,5 @@
+using HsaLedger.Domain.Common.Model;
+
 namespace HsaLedger.Client.Common.Models;
 
 public class EditTransactionModel
