@@ -11,8 +11,8 @@ var url = string.Empty;
 
 if (builder.HostEnvironment.IsDevelopment())
 {
-    url = "http://localhost:8081";
-    //url = "http://localhost:5000";
+    //url = "http://localhost:8081";
+    url = "http://localhost:5000";
 }
 else
 {

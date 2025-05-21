@@ -54,7 +54,7 @@ public class TransactionModel
                 PersonId = x.PersonId,
                 Person = x.Person != null ? PersonModel.FromEntity(x.Person) : null,
                 Date = x.Date,
-                Amount = x.Amount,
+                Amount = x.Amount / 100.0m, // Convert from int to currency with decimal
                 IsPaid = x.IsPaid,
                 IsHsaWithdrawn = x.IsHsaWithdrawn,
                 IsAudited = x.IsAudited,

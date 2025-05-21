@@ -114,7 +114,7 @@
                 <MudCheckBox @bind-Value="context.Item.IsAudited" Label="Audited" Color="Color.Primary"/>
             </EditTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="x => x.GetDocumentNames()" Title="Documents">
+        <PropertyColumn Property="x => x.GetDocumentNames()" Title="Documents" Filterable="false">
             <EditTemplate>
                 <MudFileUpload T="IReadOnlyList<IBrowserFile>" Accept=".jpg, .png, .pdf" FilesChanged="x => AddToPendingUpload(x, context.Item)" MaximumFileCount="100">
                     <ActivatorContent>
@@ -127,8 +127,8 @@
                 </MudFileUpload>
             </EditTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="x => x.LastUpdatedBy" Title="Updated By" Editable="false"/>
-        <PropertyColumn Property="x => x.LastUpdatedTime" Title="Updated" Format="MM/dd/yyyy" Editable="false"/>
+        <PropertyColumn Property="x => x.LastUpdatedBy" Title="Updated By" Editable="false" Filterable="false"/>
+        <PropertyColumn Property="x => x.LastUpdatedTime" Title="Updated" Format="MM/dd/yyyy" Editable="false" Filterable="false"/>
         <TemplateColumn CellClass="d-flex justify-end">
             <CellTemplate>
                 <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Download" OnClick="() => DownloadDocuments(context.Item)" Disabled="!context.Item.IsDocumentAvailable"/>
@@ -181,7 +181,7 @@
 
             Filters = state.FilterDefinitions.Select(f => new FilterDefinition
             {
-                Property = f.Column?.PropertyName ?? string.Empty,
+                Property = f.Title ?? string.Empty,
                 Operator = f.Operator ?? "",     // This comes from MudBlazor’s built-in filtering operators
                 Value = f.Value?.ToString()
             }).ToList()
