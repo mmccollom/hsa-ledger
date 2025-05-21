@@ -241,6 +241,11 @@ public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPage
             // Apply using Dynamic LINQ (System.Linq.Dynamic.Core)
             query = query.OrderBy(string.Join(", ", sortExpressions));
         }
+        else
+        {
+            // Default sort descending by Date
+            query = query.OrderByDescending(x => x.Date);
+        }
 
         #endregion
 

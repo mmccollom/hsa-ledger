@@ -7,7 +7,7 @@
         <MudForm Model="@_model" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
             <MudSelect T="TransactionTypeModel" ToStringFunc="_transactionTypeConverter"
                        @bind-Value="_model.TransactionType"
-                       Margin="@Margin.Dense" Label="Provider" Variant="Variant.Outlined">
+                       Margin="@Margin.Dense" Label="Type" Variant="Variant.Outlined">
                 @if (TransactionTypes != null)
                 {
                     @foreach (var transactionType in TransactionTypes)

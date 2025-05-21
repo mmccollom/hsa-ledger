@@ -1,5 +1,6 @@
 @page "/data"
 @using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Extensions
 @using HsaLedger.Client.Common.Models
@@ -19,7 +20,7 @@
         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Edit" Color="Color.Info"
                    Size="Size.Small" Style="margin-left:1em;" OnClick="ShowEditDialog">Edit</MudButton>
         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Download" Color="Color.Success"
-                   Size="Size.Small" Style="margin-left:1em;" OnClick="ExportFiltered">Export</MudButton>
+                   Size="Size.Small" Style="margin-left:1em;" OnClick="Export">Export</MudButton>
     </ToolBarContent>
     <Columns>
         <SelectColumn T="TransactionModel" />
@@ -75,10 +76,6 @@
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
                 }
-                else
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
-                }
             </CellTemplate>
             <EditTemplate>
                 <MudCheckBox @bind-Value="context.Item.IsPaid" Label="Paid" Color="Color.Primary"/>
@@ -90,10 +87,6 @@
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
                 }
-                else
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
-                }
             </CellTemplate>
             <EditTemplate>
                 <MudCheckBox @bind-Value="context.Item.IsHsaWithdrawn" Label="HSA Withdrawn" Color="Color.Primary"/>
@@ -104,10 +97,6 @@
                 @if (context.Item.IsAudited)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success"/>
-                }
-                else
-                {
-                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error"/>
                 }
             </CellTemplate>
             <EditTemplate>
@@ -162,9 +151,9 @@
         var providers = await GetProviders();
         var transactionTypes = await GetTransactionTypes();
         var persons = await GetPersons();
-        _providers = providers ?? [];
-        _transactionTypes = transactionTypes ?? [];
-        _persons = persons ?? [];
+        _providers = providers?.ToList() ?? [];
+        _transactionTypes = transactionTypes?.ToList() ?? [];
+        _persons = persons?.ToList() ?? [];
     }
     
     private async Task<GridData<TransactionModel>> LoadServerData(GridState<TransactionModel> state)
@@ -243,7 +232,7 @@
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
                 "Deletion successful",
                 AlertHelper.DeleteFallbackErrorMessage,
-                Load);
+                () => _dataGrid!.ReloadServerData());
         }
     }
 
@@ -295,7 +284,7 @@
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
                 "Update successful",
                 AlertHelper.AddFallbackErrorMessage,
-                Load);
+                () => _dataGrid!.ReloadServerData());
         }
     }
 
@@ -354,8 +343,7 @@
             
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
                 "Add successful",
-                AlertHelper.AddFallbackErrorMessage,
-                Load);
+                AlertHelper.AddFallbackErrorMessage, () => _dataGrid!.ReloadServerData());
         }
     }
     
@@ -377,14 +365,28 @@
         }
     }
     
-    private async Task ExportFiltered()
+    private async Task Export()
     {
-        var filtered = _dataGrid!.FilteredItems;
+        var result = await _transactionManager.Get();
+        if (!result.Succeeded)
+        {
+            if (result.Messages != null)
+            {
+                foreach (var message in result.Messages)
+                {
+                    _snackBar.Add(message, Severity.Error);
+                }
+            }
+            else
+            {
+                _snackBar.Add("Error getting data to export", Severity.Error);
+            }
+        }
 
         var encodedByteArray = await _clientExcelService.ExportAsync(
-            filtered,
+            result.Data!,
             sheetName: "Transactions",
-            mappers: new Dictionary<string, Func<TransactionModel, object>>
+            mappers: new Dictionary<string, Func<TransactionResponse, object>>
             {
                 //{ "Block Schedule Type", item => item.BlockScheduleType },
                 { "Id", item => $"{item.TransactionId}" },
@@ -402,7 +404,7 @@
                 { "Last Updated On", item => $"'{item.LastUpdatedTime:M/d/yy HH:mm}" }
             });
 
-        var fileName = $"Filtered_Transactions_{DateTime.Now:dd-MM-yyyy HH-mm-ss}.xlsx";
+        var fileName = $"All_Transactions_{DateTime.Now:dd-MM-yyyy HH-mm-ss}.xlsx";
 
         await _jsRuntime.InvokeVoidAsync("Download", new
         {
@@ -481,34 +483,34 @@
         {
             await AlertHelper.DataAccessAlertHandler(_snackBar, result, 
                 "Update successful",
-                AlertHelper.UpdateFallbackErrorMessage);
+                AlertHelper.UpdateFallbackErrorMessage, () => _dataGrid!.ReloadServerData());
         }
     }
 
-    private async Task<List<ProviderModel>?> GetProviders()
+    private async Task<IEnumerable<ProviderModel>?> GetProviders()
     {
         var result = await _providerManager.GetUiModel();
 
         var data = result.Data?
-            .OrderBy(x => x.Name).ToList();
+            .OrderBy(x => x.Name);
         return data;
     }
 
-    private async Task<List<TransactionTypeModel>?> GetTransactionTypes()
+    private async Task<IEnumerable<TransactionTypeModel>?> GetTransactionTypes()
     {
         var result = await _transactionTypeManager.GetUiModel();
 
         var data = result.Data?
-            .OrderBy(x => x.Code).ToList();
+            .OrderBy(x => x.Code);
         return data;
     }
 
-    private async Task<List<PersonModel>?> GetPersons()
+    private async Task<IEnumerable<PersonModel>?> GetPersons()
     {
         var result = await _personManager.GetUiModel();
 
         var data = result.Data?
-            .OrderBy(x => x.Name).ToList();
+            .OrderBy(x => x.Name);
         return data;
     }
 }
