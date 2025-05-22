@@ -211,17 +211,17 @@ public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPage
                     }
                     break;
 
-                case "IsPaid":
+                case "Paid":
                     if (bool.TryParse(value, out var isPaid))
                         query = query.Where(t => t.IsPaid == isPaid);
                     break;
 
-                case "IsHsaWithdrawn":
+                case "HSA Withdrawn":
                     if (bool.TryParse(value, out var isHsaWithdrawn))
                         query = query.Where(t => t.IsHsaWithdrawn == isHsaWithdrawn);
                     break;
 
-                case "IsAudited":
+                case "Audited":
                     if (bool.TryParse(value, out var isAudited))
                         query = query.Where(t => t.IsAudited == isAudited);
                     break;
