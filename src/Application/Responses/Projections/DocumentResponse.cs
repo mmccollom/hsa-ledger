@@ -9,7 +9,7 @@ public class DocumentResponse
     public required string Fullname { get; set; }
     public required string Name { get; set; }
     public required string Extension { get; set; }
-    public required byte[] Content { get; set; }
+    //public required byte[] Content { get; set; } Separate byte array from rest of object
     public bool AllowDelete { get; set; }
     public DateTime CreatedTime { get; set; }
     public string? CreatedBy { get; set; }
@@ -28,7 +28,7 @@ public class DocumentResponse
                 Fullname = x.Fullname,
                 Name = x.Name,
                 Extension = x.Extension,
-                Content = x.Content,
+                //Content = x.Content,
                 AllowDelete = true,
                 CreatedTime = x.CreatedTime,
                 CreatedBy = x.CreatedBy,

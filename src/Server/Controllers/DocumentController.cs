@@ -20,6 +20,15 @@ public class DocumentController : ApiControllerBase
         return result;
     }
     
+    [HttpGet]
+    [Route("download"), Authorize(Roles = "Administrator,Operations")]
+    public async Task<Result<byte[]>> GetContent(int documentId)
+    {
+        var query = new GetDocumentContentQuery(documentId);
+        var result = await Mediator.Send(query);
+        return result;
+    }
+    
     [HttpPut]
     [Authorize(Roles = "Administrator,Operations")]
     public async Task<Result<int>> Add(AddDocumentRequest document)

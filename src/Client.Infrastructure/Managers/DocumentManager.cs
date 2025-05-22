@@ -24,6 +24,13 @@ public class DocumentManager : IDocumentManager
         return result;
     }
 
+    public async Task<IResult<byte[]>> Download(int documentId)
+    {
+        var response = await _httpClient.GetAsync($"{DocumentEndpoints.GetContent}?documentId={documentId}");
+        var result = await response.ToResult<byte[]>();
+        return result;
+    }
+
     public async Task<IResult<int?>> Put(AddDocumentRequest documentRequest)
     {
         var response = await _httpClient.PutAsJsonAsync(DocumentEndpoints.Put, documentRequest);

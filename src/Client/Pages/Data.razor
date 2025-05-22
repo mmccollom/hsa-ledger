@@ -358,13 +358,13 @@
     {
         foreach (var document in transaction.Documents)
         {
-            var result = await _documentManager.Get(document.DocumentId);
+            var result = await _documentManager.Download(document.DocumentId);
 
             if (result is { Succeeded: true, Data: not null })
             {
                 await _jsRuntime.InvokeVoidAsync("Download", new
                 {
-                    ByteArray = Convert.ToBase64String(result.Data!.Content),
+                    ByteArray = Convert.ToBase64String(result.Data),
                     FileName = document.Fullname
                 });
             }
