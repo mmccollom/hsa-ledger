@@ -30,13 +30,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{81FEEDB9-3
 		wait-for-it.sh = wait-for-it.sh
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{31F82C68-4F82-48FA-AD15-2A2F29F5B3AD}"
-	ProjectSection(SolutionItems) = preProject
-		docker\docker-compose.yml = docker\docker-compose.yml
-		docker\init\create-schema.sql = docker\init\create-schema.sql
-		docker\.env = docker\.env
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lambda", "Lambda", "{3A8B15AC-3725-4479-BE16-A71C9C6EC9E4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lambda.Infrastructure", "src\Lambda.Infrastructure\Lambda.Infrastructure.csproj", "{6FC9787F-0239-44C8-944B-FEC8BECD20B2}"
