@@ -1,6 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F4DD0A81-7A45-43B8-A8BB-903BC52D6D7B}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{E0DA49F0-5432-4ACA-A2ED-8D1584EBA7BC}"
 EndProject
@@ -23,12 +27,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "src\Client\Client.csproj", "{5575F77E-B36E-45E7-8386-281B447159B2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "src\Server\Server.csproj", "{231A92C1-6502-4BDC-A3F1-30699B98652A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{81FEEDB9-3847-4E5B-A015-7300CAE15B60}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-		wait-for-it.sh = wait-for-it.sh
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lambda", "Lambda", "{3A8B15AC-3725-4479-BE16-A71C9C6EC9E4}"
 EndProject
