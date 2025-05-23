@@ -18,9 +18,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Wait for it
-COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
-
-# change the ENTRYPOINT to use wait-for-it
-ENTRYPOINT ["/wait-for-it.sh", "postgres2:5432", "--", "dotnet", "Server.dll"]
+# Dotnet command to run server
+ENTRYPOINT ["dotnet", "Server.dll"]
