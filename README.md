@@ -6,13 +6,13 @@
 
 ## ✨ Features
 
-- ✅ **Blazor WebAssembly** client for a modern, responsive UI  
-- ✅ **ASP.NET Core Web API** using .NET 8  
-- ✅ **Entity Framework Core** with PostgreSQL for persistence  
-- ✅ **CQRS with MediatR** for clear separation of reads/writes  
-- ✅ **FluentValidation** for business rule enforcement  
-- ✅ **AWS Lambda Integration** to extract SES email attachments  
-- ✅ **Modular Clean Architecture** with shared abstractions and infrastructure  
+- ✅ **Blazor WebAssembly** client for a modern, responsive UI
+- ✅ **ASP.NET Core Web API** using .NET 8
+- ✅ **Entity Framework Core** with PostgreSQL for persistence
+- ✅ **CQRS with MediatR** for clear separation of reads/writes
+- ✅ **FluentValidation** for business rule enforcement
+- ✅ **AWS Lambda Integration** to extract SES email attachments
+- ✅ **Modular Clean Architecture** with shared abstractions and infrastructure
 
 ---
 
@@ -37,7 +37,7 @@ src/
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)  
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - PostgreSQL (local or cloud)
 
 ### API (Server)
@@ -74,6 +74,57 @@ dotnet publish src/Client/Client.csproj -c Release -o publish
   - Triggers from SES email receipt
   - Extracts PDF attachments
   - Posts to the main Web API
+
+---
+
+## 🚀 Deploying the Lambda Function
+
+The `Lambda.EmailReader` project is deployed using the **.NET AWS Lambda CLI tooling** (`Amazon.Lambda.Tools`), which simplifies packaging and deployment.
+
+### Prerequisites
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+- [.NET AWS Lambda Tools](https://github.com/aws/aws-extensions-for-dotnet-cli)
+
+Install via:
+
+```bash
+dotnet tool install -g Amazon.Lambda.Tools
+```
+
+> Or update with:
+> `dotnet tool update -g Amazon.Lambda.Tools`
+
+### Step 1: Configure AWS CLI
+
+```bash
+aws configure
+```
+
+### Step 2: Deploy the Lambda
+
+Navigate to the Lambda project:
+
+```bash
+cd src/Lambda.EmailReader
+```
+
+Run the deployment command:
+
+```bash
+dotnet lambda deploy-function extract_email_attachments
+```
+
+> If you haven’t configured defaults via `aws-lambda-tools-defaults.json`, include:
+> `--function-role arn:aws:iam::<account-id>:role/<lambda-role>`
+
+### SES Rule Setup
+
+Ensure SES:
+1. Accepts email to a verified address
+2. Stores it in an S3 bucket
+3. Triggers your Lambda on `s3:ObjectCreated:*`
 
 ---
 
