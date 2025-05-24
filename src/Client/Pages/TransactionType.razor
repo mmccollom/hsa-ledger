@@ -1,6 +1,5 @@
 @page "/transactionType"
 @using HsaLedger.Application.Requests
-@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
@@ -181,9 +180,11 @@
 
     private async Task<List<TransactionTypeModel>?> GetData()
     {
-        var result = await _transactionTypeManager.GetUiModel();
+        var result = await _transactionTypeManager.Get();
 
         var data = result.Data?
+            .AsQueryable()
+            .Select(TransactionTypeModel.Projection)
             .OrderBy(x => x.TransactionTypeId).ToList();
         
         return data;
@@ -191,9 +192,11 @@
 
     private async Task<List<ProviderModel>?> GetProviders()
     {
-        var result = await _providerManager.GetUiModel();
+        var result = await _providerManager.Get();
 
         var data = result.Data?
+            .AsQueryable()
+            .Select(ProviderModel.Projection)
             .OrderBy(x => x.ProviderId).ToList();
         return data;
     }

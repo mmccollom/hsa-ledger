@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
+using HsaLedger.Application.Responses.Projections;
 
-namespace HsaLedger.Application.Responses.Models;
+namespace HsaLedger.Client.Common.Models;
 
 public class DocumentModel
 {
@@ -16,7 +17,7 @@ public class DocumentModel
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
     
-    public static Expression<Func<Domain.Entities.Document, DocumentModel>> Projection
+    public static Expression<Func<DocumentResponse, DocumentModel>> Projection
     {
         get
         {

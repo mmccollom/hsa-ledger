@@ -1,6 +1,5 @@
 @page "/provider"
 @using HsaLedger.Application.Requests
-@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Models
 @using HsaLedger.Client.Dialogs
@@ -159,9 +158,13 @@
 
     private async Task<List<ProviderModel>?> GetData()
     {
-        var result = await _providerManager.GetUiModel();
+        var result = await _providerManager.Get();
 
-        var data = result.Data?.OrderBy(x => x.ProviderId).ToList();
+        var data = result.Data?
+            .AsQueryable()
+            .Select(ProviderModel.Projection)
+            .OrderBy(x => x.ProviderId)
+            .ToList();
         return data;
     }
 }

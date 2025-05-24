@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using HsaLedger.Application.Requests;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Pagination;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
@@ -26,17 +25,17 @@ public class TransactionManager : ITransactionManager
         return result;
     }
     
-    public async Task<IResult<GridQueryResponse<TransactionModel>>> GetPaged(GridQueryRequest gridQueryRequest)
+    public async Task<IResult<GridQueryResponse<TransactionResponse>>> GetPaged(GridQueryRequest gridQueryRequest)
     {
         var response = await _httpClient.PostAsJsonAsync(TransactionEndpoints.GetPaged, gridQueryRequest);
-        var result = await response.ToResult<GridQueryResponse<TransactionModel>>();
+        var result = await response.ToResult<GridQueryResponse<TransactionResponse>>();
         return result;
     }
     
-    public async Task<IResult<IEnumerable<DocumentModel>>> GetDocuments(int transactionId)
+    public async Task<IResult<IEnumerable<DocumentResponse>>> GetDocuments(int transactionId)
     {
         var response = await _httpClient.GetAsync($"{TransactionEndpoints.GetDocuments}?transactionId={transactionId}");
-        var result = await response.ToResult<IEnumerable<DocumentModel>>();
+        var result = await response.ToResult<IEnumerable<DocumentResponse>>();
         return result;
     }
 

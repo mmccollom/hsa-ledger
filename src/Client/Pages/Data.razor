@@ -1,6 +1,5 @@
 @page "/data"
 @using HsaLedger.Application.Requests
-@using HsaLedger.Application.Responses.Models
 @using HsaLedger.Application.Responses.Projections
 @using HsaLedger.Client.Common
 @using HsaLedger.Client.Common.Extensions
@@ -200,7 +199,7 @@
         
         return new GridData<TransactionModel>
         {
-            Items = result.Data?.Items ?? [],
+            Items = result.Data?.Items?.AsQueryable().Select(TransactionModel.Projection).ToList() ?? [],
             TotalItems = result.Data?.TotalItems ?? 0
         };
     }
@@ -473,7 +472,10 @@
             var documentsResult = await _transactionManager.GetDocuments(item.TransactionId);
             if (documentsResult.Succeeded)
             {
-                item.Documents = documentsResult.Data?.ToList() ?? [];
+                item.Documents = documentsResult.Data?
+                    .AsQueryable()
+                    .Select(DocumentModel.Projection)
+                    .ToList() ?? [];
             }
             else
             {
@@ -495,27 +497,33 @@
 
     private async Task<IEnumerable<ProviderModel>?> GetProviders()
     {
-        var result = await _providerManager.GetUiModel();
+        var result = await _providerManager.Get();
 
         var data = result.Data?
+            .AsQueryable()
+            .Select(ProviderModel.Projection)
             .OrderBy(x => x.Name);
         return data;
     }
 
     private async Task<IEnumerable<TransactionTypeModel>?> GetTransactionTypes()
     {
-        var result = await _transactionTypeManager.GetUiModel();
+        var result = await _transactionTypeManager.Get();
 
         var data = result.Data?
+            .AsQueryable()
+            .Select(TransactionTypeModel.Projection)
             .OrderBy(x => x.Code);
         return data;
     }
 
     private async Task<IEnumerable<PersonModel>?> GetPersons()
     {
-        var result = await _personManager.GetUiModel();
+        var result = await _personManager.Get();
 
         var data = result.Data?
+            .AsQueryable()
+            .Select(PersonModel.Projection)
             .OrderBy(x => x.Name);
         return data;
     }

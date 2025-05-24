@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
+using HsaLedger.Application.Responses.Projections;
 
-namespace HsaLedger.Application.Responses.Models;
+namespace HsaLedger.Client.Common.Models;
 
 public class TransactionTypeModel : IEquatable<TransactionTypeModel>
 {
@@ -25,7 +26,7 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
         return providers.Length > 100 ? string.Concat(providers.AsSpan(0, 100), "...") : providers;
     }
 
-    public static Expression<Func<Domain.Entities.TransactionType, TransactionTypeModel>> Projection
+    public static Expression<Func<TransactionTypeResponse, TransactionTypeModel>> Projection
     {
         get
         {
@@ -34,7 +35,7 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
                 Code = x.Code,
                 Description = x.Description,
                 Providers = x.Providers.AsQueryable().Select(ProviderModel.Projection).ToList(),
-                AllowDelete = x.Transactions.Count == 0,
+                AllowDelete = x.AllowDelete,
                 CreatedTime = x.CreatedTime,
                 CreatedBy = x.CreatedBy,
                 LastUpdatedTime = x.LastUpdatedTime,
@@ -44,9 +45,9 @@ public class TransactionTypeModel : IEquatable<TransactionTypeModel>
         }
     }
     
-    public static TransactionTypeModel FromEntity(Domain.Entities.TransactionType entity)
+    public static TransactionTypeModel FromResponse(TransactionTypeResponse response)
     {
-        return Projection.Compile().Invoke(entity);
+        return Projection.Compile().Invoke(response);
     }
 
     public bool Equals(TransactionTypeModel? other)

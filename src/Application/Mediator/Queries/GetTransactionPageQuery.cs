@@ -5,12 +5,12 @@ using HsaLedger.Shared.Wrapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Pagination;
+using HsaLedger.Application.Responses.Projections;
 
 namespace HsaLedger.Application.Mediator.Queries;
 
-public class GetTransactionPageQuery : IRequest<Result<GridQueryResponse<TransactionModel>>>
+public class GetTransactionPageQuery : IRequest<Result<GridQueryResponse<TransactionResponse>>>
 {
     public GetTransactionPageQuery(GridQueryRequest gridQueryRequest)
     {
@@ -21,7 +21,7 @@ public class GetTransactionPageQuery : IRequest<Result<GridQueryResponse<Transac
 }
 
 [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
-public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPageQuery, Result<GridQueryResponse<TransactionModel>>>
+public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPageQuery, Result<GridQueryResponse<TransactionResponse>>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -30,7 +30,7 @@ public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPage
         _context = context;
     }
 
-    public async Task<Result<GridQueryResponse<TransactionModel>>> Handle(GetTransactionPageQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GridQueryResponse<TransactionResponse>>> Handle(GetTransactionPageQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Transactions
             .Include(x => x.Provider)
@@ -252,18 +252,18 @@ public class GetTransactionPageQueryHandler : IRequestHandler<GetTransactionPage
         var data = await query
             .Skip(request.GridQueryRequest.Page * request.GridQueryRequest.PageSize)
             .Take(request.GridQueryRequest.PageSize)
-            .Select(TransactionModel.Projection)
+            .Select(TransactionResponse.Projection)
             .ToListAsync(cancellationToken: cancellationToken);
             
 
         var totalCount = await query.CountAsync(cancellationToken: cancellationToken);
 
-        var gridQueryResponse = new GridQueryResponse<TransactionModel>
+        var gridQueryResponse = new GridQueryResponse<TransactionResponse>
         {
             TotalItems = totalCount,
             Items = data
         };
         
-        return await Result<GridQueryResponse<TransactionModel>>.SuccessAsync(gridQueryResponse);
+        return await Result<GridQueryResponse<TransactionResponse>>.SuccessAsync(gridQueryResponse);
     }
 }

@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using HsaLedger.Application.Requests;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
@@ -22,13 +21,6 @@ public class ProviderManager : IProviderManager
     {
         var response = await _httpClient.GetAsync(ProviderEndpoints.Get);
         var result = await response.ToResult<IEnumerable<ProviderResponse>>();
-        return result;
-    }
-    
-    public async Task<IResult<IEnumerable<ProviderModel>>> GetUiModel()
-    {
-        var response = await _httpClient.GetAsync(ProviderEndpoints.GetUiModel);
-        var result = await response.ToResult<IEnumerable<ProviderModel>>();
         return result;
     }
 

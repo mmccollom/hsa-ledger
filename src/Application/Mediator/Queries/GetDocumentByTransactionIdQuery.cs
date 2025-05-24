@@ -1,12 +1,12 @@
 using HsaLedger.Application.Common.Interfaces;
-using HsaLedger.Application.Responses.Models;
+using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Shared.Wrapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace HsaLedger.Application.Mediator.Queries;
 
-public class GetDocumentByTransactionIdQuery : IRequest<Result<IEnumerable<DocumentModel>>>
+public class GetDocumentByTransactionIdQuery : IRequest<Result<IEnumerable<DocumentResponse>>>
 {
     public GetDocumentByTransactionIdQuery(int transactionId)
     {
@@ -16,7 +16,7 @@ public class GetDocumentByTransactionIdQuery : IRequest<Result<IEnumerable<Docum
     public int TransactionId { get; set; }
 }
 
-public class GetDocumentByTransactionIdQueryHandler : IRequestHandler<GetDocumentByTransactionIdQuery, Result<IEnumerable<DocumentModel>>>
+public class GetDocumentByTransactionIdQueryHandler : IRequestHandler<GetDocumentByTransactionIdQuery, Result<IEnumerable<DocumentResponse>>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -25,14 +25,14 @@ public class GetDocumentByTransactionIdQueryHandler : IRequestHandler<GetDocumen
         _context = context;
     }
 
-    public async Task<Result<IEnumerable<DocumentModel>>> Handle(GetDocumentByTransactionIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<DocumentResponse>>> Handle(GetDocumentByTransactionIdQuery request, CancellationToken cancellationToken)
     {
         var data = await _context.Documents
             .Where(x => x.TransactionId == request.TransactionId)
             .AsNoTracking()
-            .Select(DocumentModel.Projection)
+            .Select(DocumentResponse.Projection)
             .ToListAsync(cancellationToken);
 
-        return await Result<IEnumerable<DocumentModel>>.SuccessAsync(data);
+        return await Result<IEnumerable<DocumentResponse>>.SuccessAsync(data);
     }
 }

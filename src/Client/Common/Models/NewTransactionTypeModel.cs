@@ -1,5 +1,3 @@
-using HsaLedger.Application.Responses.Models;
-
 namespace HsaLedger.Client.Common.Models;
 
 public class NewTransactionTypeModel

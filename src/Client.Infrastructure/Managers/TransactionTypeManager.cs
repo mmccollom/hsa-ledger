@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using HsaLedger.Application.Requests;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
@@ -22,13 +21,6 @@ public class TransactionTypeManager : ITransactionTypeManager
     {
         var response = await _httpClient.GetAsync(TransactionTypeEndpoints.Get);
         var result = await response.ToResult<IEnumerable<TransactionTypeResponse>>();
-        return result;
-    }
-    
-    public async Task<IResult<IEnumerable<TransactionTypeModel>>> GetUiModel()
-    {
-        var response = await _httpClient.GetAsync(TransactionTypeEndpoints.GetUiModel);
-        var result = await response.ToResult<IEnumerable<TransactionTypeModel>>();
         return result;
     }
 

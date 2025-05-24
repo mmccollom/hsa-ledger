@@ -1,7 +1,6 @@
 using HsaLedger.Application.Mediator.Commands;
 using HsaLedger.Application.Mediator.Queries;
 using HsaLedger.Application.Requests;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Authorization;
@@ -17,15 +16,6 @@ public class ProviderController : ApiControllerBase
     public async Task<Result<IEnumerable<ProviderResponse>>> Get()
     {
         var query = new GetProviderQuery();
-        var result = await Mediator.Send(query);
-        return result;
-    }
-    
-    [HttpGet]
-    [Route("getUiModel"), Authorize(Roles = "Administrator,Operations")]
-    public async Task<Result<IEnumerable<ProviderModel>>> GetUiModel()
-    {
-        var query = new GetProviderModelQuery();
         var result = await Mediator.Send(query);
         return result;
     }

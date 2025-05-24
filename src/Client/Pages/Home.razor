@@ -1,11 +1,10 @@
 ﻿@page "/"
-@using HsaLedger.Application.Requests
-@using HsaLedger.Application.Responses.Models
+@using HsaLedger.Client.Common.Models
 
 <PageTitle>HSA | Dashboard</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.False">
-    <MudText Typo="Typo.h3">Overview</MudText>
+    <MudText Typo="Typo.h5">Overview</MudText>
 
     <MudDivider Class="my-4" />
 
@@ -30,7 +29,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _transactions = (await GetTransactions())?.ToList() ?? [];
+        var transactions = await GetTransactions();
+        
+        _transactions = transactions?.ToList() ?? [];
 
         var total = _transactions.Sum(t => t.Amount);
         var paid = _transactions.Where(t => t.IsPaid).Sum(t => t.Amount);
@@ -38,27 +39,21 @@
         var withdrawn = _transactions.Where(t => t.IsHsaWithdrawn).Sum(t => t.Amount);
         var notWithdrawn = total - withdrawn;
 
-        _summaryCards = new()
-        {
+        _summaryCards =
+        [
             ("Total Spent", $"{total:C2}"),
             ("Paid", $"{paid:C2}"),
             ("Unpaid", $"{unpaid:C2}"),
             ("Withdrawn", $"{withdrawn:C2}"),
             ("Not Withdrawn", $"{notWithdrawn:C2}"),
             ("Transactions", _transactions.Count.ToString())
-        };
+        ];
     }
 
     private async Task<IEnumerable<TransactionModel>?> GetTransactions()
     {
-        var result = await _transactionManager.GetPaged(new GridQueryRequest
-        {
-            Page = 1,
-            PageSize = 999999,
-            Filters = [],
-            Sorts = []
-        });
+        var result = await _transactionManager.Get();
 
-        return result.Data?.Items;
+        return result.Data?.AsQueryable().Select(TransactionModel.Projection);
     }
 }

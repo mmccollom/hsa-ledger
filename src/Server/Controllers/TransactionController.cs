@@ -1,7 +1,6 @@
 using HsaLedger.Application.Mediator.Commands;
 using HsaLedger.Application.Mediator.Queries;
 using HsaLedger.Application.Requests;
-using HsaLedger.Application.Responses.Models;
 using HsaLedger.Application.Responses.Pagination;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Shared.Wrapper;
@@ -24,7 +23,7 @@ public class TransactionController : ApiControllerBase
     
     [HttpPost]
     [Route("paged"), Authorize(Roles = "Administrator,Operations")]
-    public async Task<Result<GridQueryResponse<TransactionModel>>> GetPaged(GridQueryRequest gridQueryRequest)
+    public async Task<Result<GridQueryResponse<TransactionResponse>>> GetPaged(GridQueryRequest gridQueryRequest)
     {
         var query = new GetTransactionPageQuery(gridQueryRequest);
         var result = await Mediator.Send(query);
@@ -33,7 +32,7 @@ public class TransactionController : ApiControllerBase
     
     [HttpGet]
     [Route("documents"), Authorize(Roles = "Administrator,Operations")]
-    public async Task<Result<IEnumerable<DocumentModel>>> GetDocuments(int transactionId)
+    public async Task<Result<IEnumerable<DocumentResponse>>> GetDocuments(int transactionId)
     {
         var query = new GetDocumentByTransactionIdQuery(transactionId);
         var result = await Mediator.Send(query);

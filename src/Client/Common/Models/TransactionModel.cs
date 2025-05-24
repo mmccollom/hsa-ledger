@@ -1,7 +1,8 @@
 using System.Linq.Expressions;
+using HsaLedger.Application.Responses.Projections;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace HsaLedger.Application.Responses.Models;
+namespace HsaLedger.Client.Common.Models;
 
 public class TransactionModel
 {
@@ -40,7 +41,7 @@ public class TransactionModel
     public List<IBrowserFile>? FilesPendingUpload { get; set; }
     public bool IsPendingUpload { get; set; }
 
-    public static Expression<Func<Domain.Entities.Transaction, TransactionModel>> Projection
+    public static Expression<Func<TransactionResponse, TransactionModel>> Projection
     {
         get
         {
@@ -48,13 +49,13 @@ public class TransactionModel
             {
                 TransactionId = x.TransactionId,
                 TransactionTypeId = x.TransactionTypeId,
-                TransactionType = TransactionTypeModel.FromEntity(x.TransactionType),
+                TransactionType = TransactionTypeModel.FromResponse(x.TransactionType),
                 ProviderId = x.ProviderId,
-                Provider = ProviderModel.FromEntity(x.Provider),
+                Provider = ProviderModel.FromResponse(x.Provider),
                 PersonId = x.PersonId,
-                Person = x.Person != null ? PersonModel.FromEntity(x.Person) : null,
+                Person = x.Person != null ? PersonModel.FromResponse(x.Person) : null,
                 Date = x.Date,
-                Amount = x.Amount / 100.0m, // Convert from int to currency with decimal
+                Amount = x.Amount,
                 IsPaid = x.IsPaid,
                 IsHsaWithdrawn = x.IsHsaWithdrawn,
                 IsAudited = x.IsAudited,
