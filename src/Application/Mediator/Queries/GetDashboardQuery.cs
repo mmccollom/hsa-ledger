@@ -31,7 +31,7 @@ public class GetDashboardQueryHandler : IRequestHandler<GetDashboardQuery, Resul
         {
             TotalSpent = totalAmount,
             Paid = totalPaidAmount,
-            Unpaid = totalAmount - totalWithdrawnAmount,
+            Unpaid = totalAmount - totalPaidAmount,
             Withdrawn = totalWithdrawnAmount,
             NotWithdrawn = totalAmount - totalWithdrawnAmount,
             CountOfTransactions = countOfTransactions,
