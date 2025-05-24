@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using HsaLedger.Client;
+using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -23,4 +24,8 @@ else
 builder.Services.AddClientServices(url);
 builder.Services.AddMudServices();
 
-await builder.Build().RunAsync();
+var sp = builder.Build();
+var httpInterceptor = sp.Services.GetRequiredService<IHttpInterceptorManager>();
+httpInterceptor.RegisterEvent(); // ✅ ensure this happens before anything uses it
+    
+await sp.RunAsync();

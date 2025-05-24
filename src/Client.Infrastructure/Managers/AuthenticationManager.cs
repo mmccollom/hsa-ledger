@@ -125,7 +125,15 @@ public class AuthenticationManager : IAuthenticationManager
 
             if (!result.Succeeded || string.IsNullOrEmpty(result.Data?.AccessToken))
             {
-                throw new ApplicationException("Something went wrong during the refresh token action");
+                if (result.Messages != null)
+                {
+                    var joinedMessages = string.Join(Environment.NewLine, result.Messages);
+                    throw new ApplicationException(joinedMessages);
+                }
+                else
+                {
+                    throw new ApplicationException("Something went wrong during the refresh token action");    
+                }
             }
 
             var token = result.Data?.AccessToken;
