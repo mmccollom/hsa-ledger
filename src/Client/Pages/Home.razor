@@ -1,7 +1,64 @@
 ﻿@page "/"
+@using HsaLedger.Application.Requests
+@using HsaLedger.Application.Responses.Models
 
-<PageTitle>HSA</PageTitle>
+<PageTitle>HSA | Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.False">
+    <MudText Typo="Typo.h3">Overview</MudText>
 
-Welcome to your new app.
+    <MudDivider Class="my-4" />
+
+    <MudGrid GutterSize="3">
+        @foreach (var card in _summaryCards)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1">@card.Label</MudText>
+                        <MudText Typo="Typo.h5">@card.Value</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<TransactionModel> _transactions = new();
+    private List<(string Label, string Value)> _summaryCards = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _transactions = (await GetTransactions())?.ToList() ?? [];
+
+        var total = _transactions.Sum(t => t.Amount);
+        var paid = _transactions.Where(t => t.IsPaid).Sum(t => t.Amount);
+        var unpaid = total - paid;
+        var withdrawn = _transactions.Where(t => t.IsHsaWithdrawn).Sum(t => t.Amount);
+        var notWithdrawn = total - withdrawn;
+
+        _summaryCards = new()
+        {
+            ("Total Spent", $"{total:C2}"),
+            ("Paid", $"{paid:C2}"),
+            ("Unpaid", $"{unpaid:C2}"),
+            ("Withdrawn", $"{withdrawn:C2}"),
+            ("Not Withdrawn", $"{notWithdrawn:C2}"),
+            ("Transactions", _transactions.Count.ToString())
+        };
+    }
+
+    private async Task<IEnumerable<TransactionModel>?> GetTransactions()
+    {
+        var result = await _transactionManager.GetPaged(new GridQueryRequest
+        {
+            Page = 1,
+            PageSize = 999999,
+            Filters = [],
+            Sorts = []
+        });
+
+        return result.Data?.Items;
+    }
+}

@@ -100,34 +100,48 @@ public class AuthenticationManager : IAuthenticationManager
         _httpClient.DefaultRequestHeaders.Authorization = null;
         return await Result.SuccessAsync();
     }
-
+    
+    private static readonly SemaphoreSlim RefreshLock = new(1, 1);
     public async Task<string> RefreshToken()
     {
-        var refreshToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
-        var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        var user = state.User;
-        var username = user.Claims.FirstOrDefault(x => x.Type == "name")?.Value;
-
-        var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.Refresh,
-            new RefreshRequest { Username = username!, RefreshToken = refreshToken! });
-
-        var result = await response.ToResult<AuthResponse>();
-
-        if (!result.Succeeded || string.IsNullOrEmpty(result.Data?.AccessToken))
+        await RefreshLock.WaitAsync();
+        try
         {
-            throw new ApplicationException("Something went wrong during the refresh token action");
-        }
+            var currentToken = await GetValidToken();
+            if (currentToken != null)
+            {
+                return currentToken;
+            }
+            
+            var refreshToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
+            var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = state.User;
+            var username = user.Claims.FirstOrDefault(x => x.Type == "name")?.Value;
 
-        var token = result.Data?.AccessToken;
-        refreshToken = result.Data?.RefreshToken;
-        var expiresIn = result.Data?.ExpiresIn;
-        var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
-        await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
-        await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
-        await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);
+            var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.Refresh,
+                new RefreshRequest { Username = username!, RefreshToken = refreshToken! });
+
+            var result = await response.ToResult<AuthResponse>();
+
+            if (!result.Succeeded || string.IsNullOrEmpty(result.Data?.AccessToken))
+            {
+                throw new ApplicationException("Something went wrong during the refresh token action");
+            }
+
+            var token = result.Data?.AccessToken;
+            refreshToken = result.Data?.RefreshToken;
+            var expiresIn = result.Data?.ExpiresIn;
+            var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
+            await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
+            await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
+            await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);
         
-        //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return token!;
+            return token!;
+        }
+        finally
+        {
+            RefreshLock.Release();
+        }
     }
 
     public async Task<string?> GetValidToken()
