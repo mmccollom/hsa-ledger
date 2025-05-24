@@ -3,6 +3,7 @@ using HsaLedger.Application.Mediator.Queries;
 using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Pagination;
 using HsaLedger.Application.Responses.Projections;
+using HsaLedger.Application.Responses.SimpleDto;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,15 @@ public class TransactionController : ApiControllerBase
     public async Task<Result<GridQueryResponse<TransactionResponse>>> GetPaged(GridQueryRequest gridQueryRequest)
     {
         var query = new GetTransactionPageQuery(gridQueryRequest);
+        var result = await Mediator.Send(query);
+        return result;
+    }
+    
+    [HttpGet]
+    [Route("dashboard"), Authorize(Roles = "Administrator,Operations")]
+    public async Task<Result<DashboardResponse>> GetDashboard()
+    {
+        var query = new GetDashboardQuery();
         var result = await Mediator.Send(query);
         return result;
     }

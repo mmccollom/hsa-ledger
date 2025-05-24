@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Pagination;
 using HsaLedger.Application.Responses.Projections;
+using HsaLedger.Application.Responses.SimpleDto;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Client.Infrastructure.Managers.Routes;
 using HsaLedger.Shared.Common.Extensions;
@@ -22,6 +23,13 @@ public class TransactionManager : ITransactionManager
     {
         var response = await _httpClient.GetAsync(TransactionEndpoints.Get);
         var result = await response.ToResult<IEnumerable<TransactionResponse>>();
+        return result;
+    }
+    
+    public async Task<IResult<DashboardResponse>> GetDashboardInfo()
+    {
+        var response = await _httpClient.GetAsync(TransactionEndpoints.GetDashboard);
+        var result = await response.ToResult<DashboardResponse>();
         return result;
     }
     

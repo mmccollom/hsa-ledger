@@ -1,5 +1,4 @@
 ﻿@page "/"
-@using HsaLedger.Client.Common.Models
 
 <PageTitle>HSA | Dashboard</PageTitle>
 
@@ -24,36 +23,20 @@
 </MudContainer>
 
 @code {
-    private List<TransactionModel> _transactions = new();
     private List<(string Label, string Value)> _summaryCards = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var transactions = await GetTransactions();
-        
-        _transactions = transactions?.ToList() ?? [];
-
-        var total = _transactions.Sum(t => t.Amount);
-        var paid = _transactions.Where(t => t.IsPaid).Sum(t => t.Amount);
-        var unpaid = total - paid;
-        var withdrawn = _transactions.Where(t => t.IsHsaWithdrawn).Sum(t => t.Amount);
-        var notWithdrawn = total - withdrawn;
+        var dashboardInfo = await _transactionManager.GetDashboardInfo();
 
         _summaryCards =
         [
-            ("Total Spent", $"{total:C2}"),
-            ("Paid", $"{paid:C2}"),
-            ("Unpaid", $"{unpaid:C2}"),
-            ("Withdrawn", $"{withdrawn:C2}"),
-            ("Not Withdrawn", $"{notWithdrawn:C2}"),
-            ("Transactions", _transactions.Count.ToString())
+            ("Total Spent", $"{dashboardInfo.Data?.TotalSpent:C2}"),
+            ("Paid", $"{dashboardInfo.Data?.Paid:C2}"),
+            ("Unpaid", $"{dashboardInfo.Data?.Unpaid:C2}"),
+            ("Withdrawn", $"{dashboardInfo.Data?.Withdrawn:C2}"),
+            ("Not Withdrawn", $"{dashboardInfo.Data?.NotWithdrawn:C2}"),
+            ("Transactions", dashboardInfo.Data?.CountOfTransactions.ToString() ?? string.Empty)
         ];
-    }
-
-    private async Task<IEnumerable<TransactionModel>?> GetTransactions()
-    {
-        var result = await _transactionManager.Get();
-
-        return result.Data?.AsQueryable().Select(TransactionModel.Projection);
     }
 }
