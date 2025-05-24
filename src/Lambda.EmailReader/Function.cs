@@ -2,6 +2,8 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.SimpleEmail;
+using Amazon.SimpleEmail.Model;
 using HsaLedger.Application.Requests;
 using HsaLedger.Client.Infrastructure.Managers.Interfaces;
 using HsaLedger.Lambda.Infrastructure;
@@ -17,10 +19,12 @@ namespace HsaLedger.Lambda.EmailReader;
 public class Function
 {
     private readonly IAmazonS3 _s3;
+    private readonly IAmazonSimpleEmailService _ses;
     private readonly ITransactionManager _transactionManager;
     private readonly IProviderManager _providerManager;
     private readonly IPersonManager _personManager;
     private readonly ITransactionTypeManager _transactionTypeManager;
+    private readonly string _emailSendFrom;
 
     public Function()
     {
@@ -38,6 +42,10 @@ public class Function
         // Parse "SecretInfo" from configuration as SecretInfo class
         var secretInfo = configuration.GetSection("SecretInfo").Get<SecretInfo>() ?? throw new InvalidOperationException();
         
+        // Parse "EmailInfo" from configuration as EmailInfo class
+        var emailInfo = configuration.GetSection("EmailInfo").Get<EmailInfo>() ?? throw new InvalidOperationException();
+        _emailSendFrom = emailInfo.SendFrom;
+        
         // Register secret info
         services.AddSingleton(secretInfo);
         
@@ -54,6 +62,7 @@ public class Function
         // Intentionally eagerly build Function and its dependencies.
         // This causes time spent in the Constructor to appear on INIT_REPORTs
         _s3 = serviceProvider.GetRequiredService<IAmazonS3>();
+        _ses = serviceProvider.GetRequiredService<IAmazonSimpleEmailService>();
         _transactionManager = serviceProvider.GetRequiredService<ITransactionManager>();
         _providerManager = serviceProvider.GetRequiredService<IProviderManager>();
         _personManager = serviceProvider.GetRequiredService<IPersonManager>();
@@ -62,6 +71,7 @@ public class Function
 
     public async Task FunctionHandler(S3Event s3Event, ILambdaContext context)
     {
+        #region Get providers, people, and transaction types from the API
         // get providers
         var providers = await _providerManager.Get();
 
@@ -78,6 +88,8 @@ public class Function
             {
                 context.Logger.LogError("Failed to get providers");
             }
+
+            return;
         }
         
         // get persons
@@ -96,6 +108,8 @@ public class Function
             {
                 context.Logger.LogError("Failed to get persons");
             }
+
+            return;
         }
         
         // get transaction types
@@ -114,7 +128,10 @@ public class Function
             {
                 context.Logger.LogError("Failed to get transaction types");
             }
+
+            return;
         }
+        #endregion
         
         // get placeholders
         var provider = providers.Data!.First(x => x.Name == "Placeholder");
@@ -178,11 +195,67 @@ public class Function
                     context.Logger.LogInformation($"New addDocumentRequest created for {fileName}");
                 }
             }
+
+            if (transactionRequest.Documents.Count == 0)
+            {
+                context.Logger.LogInformation("No documents found in email, skipping");
+
+                continue;
+            }
             // add transaction
             var transactionResult = await _transactionManager.Put(transactionRequest);
             if (transactionResult.Succeeded)
             {
                 context.Logger.LogInformation($"Transaction created successfully with ID: {transactionResult.Data}");
+
+                var recipient = message.From.Mailboxes.FirstOrDefault()?.Address;
+                var subject = message.Subject;
+                var messageId = message.MessageId;
+
+                if (string.IsNullOrWhiteSpace(recipient))
+                {
+                    context.Logger.LogInformation("Recipient address not set, skipping response email");
+                    continue;
+                }
+
+                context.Logger.LogInformation($"Recipient: {recipient}");
+
+                // Construct reply email using MimeKit
+                var reply = new MimeMessage();
+                reply.From.Add(MailboxAddress.Parse(_emailSendFrom)); // Must be SES-verified
+                reply.To.Add(MailboxAddress.Parse(recipient));
+                reply.Subject = $"Re: {subject}";
+                reply.InReplyTo = messageId;
+                reply.References.Add(messageId);
+
+                reply.Body = new TextPart("plain")
+                {
+                    Text = "Thank you! Your HSA documents were successfully processed and recorded."
+                };
+
+                using var memStream = new MemoryStream();
+                await reply.WriteToAsync(memStream);
+                var rawMessage = new RawMessage
+                {
+                    Data = new MemoryStream(memStream.ToArray())
+                };
+
+                var sendRequest = new SendRawEmailRequest
+                {
+                    RawMessage = rawMessage,
+                    Source = _emailSendFrom,
+                    Destinations = [recipient]
+                };
+
+                try
+                {
+                    var response = await _ses.SendRawEmailAsync(sendRequest);
+                    context.Logger.LogInformation($"Reply sent to {recipient}, message ID: {response.MessageId}");
+                }
+                catch (Exception ex)
+                {
+                    context.Logger.LogError($"Failed to send confirmation reply: {ex.Message}");
+                }
             }
             else
             {

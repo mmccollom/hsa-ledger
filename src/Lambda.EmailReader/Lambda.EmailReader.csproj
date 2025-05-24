@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <PackageReference Include="Amazon.Lambda.S3Events" Version="3.1.0" />
+      <PackageReference Include="AWSSDK.SimpleEmail" Version="4.0.0.4" />
       <PackageReference Include="MimeKit" Version="4.12.0" />
       <PackageReference Include="Amazon.Lambda.Core" Version="2.5.1" />
     </ItemGroup>

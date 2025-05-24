@@ -9,6 +9,7 @@ internal static class ConfigureServices
     {
         // Register AWS services
         services.AddAWSService<Amazon.S3.IAmazonS3>();
+        services.AddAWSService<Amazon.SimpleEmail.IAmazonSimpleEmailService>();
         
         // Add API Managers
         services.AddManagers();
