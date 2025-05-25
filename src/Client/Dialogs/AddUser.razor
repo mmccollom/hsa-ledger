@@ -1,4 +1,3 @@
-@using FluentValidation
 @using HsaLedger.Client.Common.Models
 @namespace HsaLedger.Client.Dialogs
 <MudDialog>
@@ -13,11 +12,13 @@
             <MudTextField Variant="Variant.Outlined"
                           @bind-Value="_model.Password"
                           For="@(() => _model.Password)"
+                          InputType="InputType.Password"
                           Immediate="true"
                           Label="Password*"/>
             <MudTextField Variant="Variant.Outlined"
                           @bind-Value="_model.ConfirmPassword"
                           For="@(() => _model.ConfirmPassword)"
+                          InputType="InputType.Password"
                           Immediate="true"
                           Label="Confirm Password*"/>
         </MudForm>
