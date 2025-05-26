@@ -23,7 +23,7 @@ public class AuthenticationManager : IAuthenticationManager
         _tokenHolder = tokenHolder;
     }
 
-    public async Task<IResult> Login(LoginRequest loginRequest)
+    public async Task<Result<AuthResponse?>> Login(LoginRequest loginRequest)
     {
         var response = await _httpClient.PostAsJsonAsync(LoginEndpoint, loginRequest);
         var result = await response.ToResult<AuthResponse>();
@@ -37,20 +37,20 @@ public class AuthenticationManager : IAuthenticationManager
             _tokenHolder.RefreshToken = refreshToken;
             _tokenHolder.TokenExpiration = expirationUtc;
 
-            return await Result.SuccessAsync();
+            return await Result<AuthResponse?>.SuccessAsync(result.Data);
         }
 
         if (result.Messages == null)
         {
-            return await Result.FailAsync();
+            return await Result<AuthResponse?>.FailAsync();
         }
         
-        return await Result.FailAsync(result.Messages);
+        return await Result<AuthResponse?>.FailAsync(result.Messages);
     }
     
-    public async Task<IResult> RefreshToken()
+    public async Task<Result<AuthResponse?>> RefreshToken(string? refreshToken = null)
     {
-        var refreshToken = _tokenHolder.RefreshToken;
+        refreshToken ??= _tokenHolder.RefreshToken;
 
         var response = await _httpClient.PostAsJsonAsync(RefreshEndpoint,
             new RefreshRequest { RefreshToken = refreshToken! });
@@ -67,14 +67,14 @@ public class AuthenticationManager : IAuthenticationManager
             _tokenHolder.RefreshToken = refreshToken;
             _tokenHolder.TokenExpiration = expirationUtc;
 
-            return await Result.SuccessAsync();
+            return await Result<AuthResponse?>.SuccessAsync(result.Data);
         }
         
         if (result.Messages == null)
         {
-            return await Result.FailAsync();
+            return await Result<AuthResponse?>.FailAsync();
         }
         
-        return await Result.FailAsync(result.Messages);
+        return await Result<AuthResponse?>.FailAsync(result.Messages);
     }
 }
