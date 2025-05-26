@@ -32,21 +32,7 @@ public class AuthenticationHandler : DelegatingHandler
         if (string.IsNullOrEmpty(_tokenHolder.Token))
         {
             var secrets = await GetServiceSecrets();
-            var result = await _authenticationManager.Login(new LoginRequest { Username = secrets.Username!, Password = secrets.Password!});
-            if (!result.Succeeded)
-            {
-                throw new Exception("Failed to login: " + result.Messages?.FirstOrDefault());
-            }
-        }
-
-        // Check if token needs ot be refreshed, if so refresh it
-        if (_tokenHolder.TokenExpiration != null && _tokenHolder.TokenExpiration < DateTime.UtcNow)
-        {
-            var result = await _authenticationManager.RefreshToken();
-            if (!result.Succeeded)
-            {
-                throw new Exception("Failed to refresh token: " + result.Messages?.FirstOrDefault());
-            }
+            _tokenHolder.Token = secrets.AccessToken;
         }
         
         if (request.Headers.Authorization?.Scheme != "Bearer")
@@ -62,12 +48,12 @@ public class AuthenticationHandler : DelegatingHandler
         return await base.SendAsync(request, cancellationToken);
     }
     
-    private async Task<ServiceSecrets> GetServiceSecrets()
+    private async Task<ServiceJwtSecrets> GetServiceSecrets()
     {
         // get api credentials from AWS secrets
-        var secrets = await AwsSecretService.AwsConfigurationFromSecret<ServiceSecrets>(_info.Name, _info.Region);
+        var secrets = await AwsSecretService.AwsConfigurationFromSecret<ServiceJwtSecrets>(_info.Name, _info.Region);
 
-        if (secrets?.Username == null || secrets.Password == null)
+        if (secrets?.AccessToken == null)
         {
             throw new NullReferenceException("Null secret values");
         }
