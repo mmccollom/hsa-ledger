@@ -1,6 +1,7 @@
 using System.Text;
 using FluentValidation.AspNetCore;
 using HsaLedger.Server.Identity;
+using HsaLedger.Server.Identity.Model;
 using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Server.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,6 +16,8 @@ public static class ConfigureServices
     public static IServiceCollection AddClientServices(this IServiceCollection services,
         IConfiguration configuration)
     {
+        var jwtConfigurationModel = configuration.GetSection("Jwt").Get<JwtConfigurationModel>() ?? throw new Exception("Jwt Configuration not found");
+        services.AddSingleton(jwtConfigurationModel);
         services.AddHealthChecks();
         services.AddAuthorization();
         services.AddAuthentication(options =>
@@ -30,9 +33,9 @@ public static class ConfigureServices
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidIssuer = configuration["Jwt:Issuer"],
-                    ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                    ValidIssuer = jwtConfigurationModel.Issuer,
+                    ValidAudience = jwtConfigurationModel.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfigurationModel.Key)),
                     ClockSkew = TimeSpan.Zero // Ensure no clock skew
                 };
             });
@@ -43,7 +46,8 @@ public static class ConfigureServices
             .AddDefaultTokenProviders()
             .AddSignInManager();
 
-        services.AddScoped<JwtTokenGenerator>();
+        services.AddScoped<IdentityQueries>();
+        services.AddScoped<IdentityCommands>();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();

@@ -1,5 +1,5 @@
 using Blazored.FluentValidation;
-using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Requests;
 using MudBlazor;
 
 namespace HsaLedger.Client.Pages.Authentication;

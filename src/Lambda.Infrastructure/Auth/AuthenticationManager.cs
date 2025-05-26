@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
-using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Identity;
+using HsaLedger.Application.Services;
 using HsaLedger.Lambda.Infrastructure.Models;
 using HsaLedger.Shared.Common.Constants.HttpClient;
 using HsaLedger.Shared.Common.Extensions;
@@ -30,8 +31,7 @@ public class AuthenticationManager : IAuthenticationManager
         {
             var token = result.Data?.AccessToken;
             var refreshToken = result.Data?.RefreshToken;
-            var expiresIn = result.Data?.ExpiresIn;
-            var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
+            var expirationUtc = JwtTokenService.GetTokenExpiry(result.Data?.AccessToken ?? throw new Exception("Token is null"));
 
             _tokenHolder.Token = token;
             _tokenHolder.RefreshToken = refreshToken;
@@ -51,10 +51,9 @@ public class AuthenticationManager : IAuthenticationManager
     public async Task<IResult> RefreshToken()
     {
         var refreshToken = _tokenHolder.RefreshToken;
-        var username = _tokenHolder.Username;
 
         var response = await _httpClient.PostAsJsonAsync(RefreshEndpoint,
-            new RefreshRequest { Username = username!, RefreshToken = refreshToken! });
+            new RefreshRequest { RefreshToken = refreshToken! });
 
         var result = await response.ToResult<AuthResponse>();
 
@@ -62,8 +61,7 @@ public class AuthenticationManager : IAuthenticationManager
         {
             var token = result.Data?.AccessToken;
             refreshToken = result.Data?.RefreshToken;
-            var expiresIn = result.Data?.ExpiresIn;
-            var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
+            var expirationUtc = JwtTokenService.GetTokenExpiry(result.Data?.AccessToken ?? throw new Exception("Token is null"));
         
             _tokenHolder.Token = token;
             _tokenHolder.RefreshToken = refreshToken;

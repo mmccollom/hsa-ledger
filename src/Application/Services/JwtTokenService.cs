@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using HsaLedger.Shared.Common.Constants.Permission;
 
@@ -60,6 +61,39 @@ public static class JwtTokenService
         }
 
         return claims;
+    }
+    
+    public static bool IsTokenExpired(string token)
+    {
+        var expiry = GetTokenExpiry(token);
+        return !expiry.HasValue || expiry <= DateTime.UtcNow;
+    }
+
+    public static DateTime? GetTokenExpiry(string token)
+    {
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length != 3)
+                return null;
+
+            var payload = parts[1];
+            var payloadBytes = ParseBase64WithoutPadding(payload);
+            var json = Encoding.UTF8.GetString(payloadBytes);
+            var document = JsonDocument.Parse(json);
+
+            if (!document.RootElement.TryGetProperty("exp", out var expElement))
+                return null;
+
+            var expSeconds = expElement.GetInt64();
+            var expiration = DateTimeOffset.FromUnixTimeSeconds(expSeconds).UtcDateTime;
+
+            return expiration;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static byte[] ParseBase64WithoutPadding(string payload)

@@ -1,4 +1,4 @@
-using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Requests;
 using HsaLedger.Shared.Wrapper;
 
 namespace HsaLedger.Lambda.Infrastructure.Auth;

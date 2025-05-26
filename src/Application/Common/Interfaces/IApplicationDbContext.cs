@@ -13,6 +13,7 @@ public interface IApplicationDbContext
     DbSet<Provider> Providers { get; }
     DbSet<Transaction> Transactions { get; }
     DbSet<TransactionType> TransactionTypes { get; }
+    DbSet<UserRefreshToken> UserRefreshTokens { get; }
     Task<IEnumerable<AppUser>> GetUsers();
     Task<IEnumerable<AppRole>> GetRoles();
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

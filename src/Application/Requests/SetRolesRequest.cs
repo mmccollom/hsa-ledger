@@ -1,4 +1,4 @@
-namespace HsaLedger.Application.Requests.Identity;
+namespace HsaLedger.Application.Requests;
 
 public class SetRolesRequest
 {

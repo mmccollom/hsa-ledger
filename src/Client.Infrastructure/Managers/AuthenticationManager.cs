@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
-using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Application.Services;
@@ -53,8 +53,7 @@ public class AuthenticationManager : IAuthenticationManager
         {
             var token = result.Data?.AccessToken;
             var refreshToken = result.Data?.RefreshToken;
-            var expiresIn = result.Data?.ExpiresIn;
-            var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
+            var expirationUtc = JwtTokenService.GetTokenExpiry(result.Data?.AccessToken ?? throw new Exception("Token is null"));
             
             // validate role
             var claims = JwtTokenService.ClaimsFromJwt(token!);
@@ -114,12 +113,8 @@ public class AuthenticationManager : IAuthenticationManager
             }
             
             var refreshToken = await _localStorage.GetItemAsync<string>(StorageConstants.Local.RefreshToken);
-            var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            var user = state.User;
-            var username = user.Claims.FirstOrDefault(x => x.Type == "name")?.Value;
-
             var response = await _httpClient.PostAsJsonAsync(IdentityEndpoints.Refresh,
-                new RefreshRequest { Username = username!, RefreshToken = refreshToken! });
+                new RefreshRequest { RefreshToken = refreshToken! });
 
             var result = await response.ToResult<AuthResponse>();
 
@@ -138,8 +133,7 @@ public class AuthenticationManager : IAuthenticationManager
 
             var token = result.Data?.AccessToken;
             refreshToken = result.Data?.RefreshToken;
-            var expiresIn = result.Data?.ExpiresIn;
-            var expirationUtc = DateTime.UtcNow.AddSeconds(expiresIn ?? 0);
+            var expirationUtc = JwtTokenService.GetTokenExpiry(result.Data?.AccessToken ?? throw new Exception("Token is null"));
             await _localStorage.SetItemAsync(StorageConstants.Local.AuthToken, token);
             await _localStorage.SetItemAsync(StorageConstants.Local.RefreshToken, refreshToken);
             await _localStorage.SetItemAsync(StorageConstants.Local.AuthTokenExpiration, expirationUtc);

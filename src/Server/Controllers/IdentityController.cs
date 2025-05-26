@@ -1,27 +1,22 @@
-using HsaLedger.Application.Mediator.Queries;
-using HsaLedger.Application.Requests.Identity;
+using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Application.Responses.Projections;
 using HsaLedger.Server.Identity;
-using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HsaLedger.Server.Controllers;
 
 public class IdentityController : ApiControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
-    private readonly JwtTokenGenerator _jwtTokenGenerator;
+    private readonly IdentityQueries _identityQueries;
+    private readonly IdentityCommands _identityCommands;
 
-    public IdentityController(UserManager<User> userManager, SignInManager<User> signInManager,JwtTokenGenerator jwtTokenGenerator)
+    public IdentityController(IdentityQueries identityQueries, IdentityCommands identityCommands)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _jwtTokenGenerator = jwtTokenGenerator;
+        _identityQueries = identityQueries;
+        _identityCommands = identityCommands;
     }
 
     [AllowAnonymous]
@@ -29,30 +24,7 @@ public class IdentityController : ApiControllerBase
     [Route("register")]
     public async Task<Result<string>> Register(RegisterRequest request)
     {
-        var user = new User
-        {
-            UserName = request.Username,
-        };
-
-        var result = await _userManager.CreateAsync(user, request.Password);
-
-        if (!result.Succeeded)
-            return await Result<string>.FailAsync(result.Errors.Select(e => e.Description).ToList());
-        
-        /*
-        // TODO: Send `confirmUrl` via email here...
-
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var confirmUrl = _linkGenerator.GetUriByAction(
-            HttpContext,
-            action: nameof(ConfirmEmail),
-            controller: "Identity",
-            values: new { userId = user.Id, token });
-
-        Console.WriteLine(confirmUrl);
-        */
-
-        return await Result<string>.SuccessAsync("User registered.");
+        return await _identityCommands.Register(request);
     }
 
     [AllowAnonymous]
@@ -60,16 +32,7 @@ public class IdentityController : ApiControllerBase
     [Route("login")]
     public async Task<Result<AuthResponse>> Login(LoginRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user is not { IsEnabled: true })
-            return await Result<AuthResponse>.FailAsync("Invalid login.");
-
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!result.Succeeded)
-            return await Result<AuthResponse>.FailAsync("Invalid login.");
-
-        var tokenResult = await _jwtTokenGenerator.GenerateTokenAsync(user);
-        return await Result<AuthResponse>.SuccessAsync(tokenResult);
+        return await _identityCommands.Login(request);
     }
 
     [HttpPost]
@@ -77,16 +40,7 @@ public class IdentityController : ApiControllerBase
     [AllowAnonymous]
     public async Task<Result<AuthResponse>> Refresh(RefreshRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user == null)
-            return await Result<AuthResponse>.FailAsync("User not found.");
-
-        var storedToken = await _jwtTokenGenerator.GetStoredRefreshTokenAsync(user);
-        if (storedToken != request.RefreshToken)
-            return await Result<AuthResponse>.FailAsync("Invalid refresh token");
-
-        var tokenResponse = await _jwtTokenGenerator.GenerateTokenAsync(user);
-        return await Result<AuthResponse>.SuccessAsync(tokenResponse);
+        return await _identityCommands.Refresh(request);
     }
 
     [HttpPost]
@@ -94,14 +48,7 @@ public class IdentityController : ApiControllerBase
     [Authorize]
     public async Task<Result<string>> ChangePassword(ChangePasswordRequest request)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null) return await Result<string>.FailAsync("User not found.");
-
-        var result = await _userManager.ChangePasswordAsync(user, request.Password, request.NewPassword);
-        if (!result.Succeeded)
-            return await Result<string>.FailAsync(result.Errors.Select(e => e.Description).ToList());
-
-        return await Result<string>.SuccessAsync("Password changed.");
+        return await _identityCommands.ChangePassword(request, User);
     }
 
     [HttpPost]
@@ -109,20 +56,7 @@ public class IdentityController : ApiControllerBase
     [Authorize(Roles = "Administrator")]
     public async Task<Result<string>> SetEnabled(SetEnabledRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user == null) return await Result<string>.FailAsync("User not found.");
-
-        var existingRoles = await _userManager.GetRolesAsync(user);
-        var removeResult = await _userManager.RemoveFromRolesAsync(user, existingRoles);
-        if (!removeResult.Succeeded)
-            return await Result<string>.FailAsync(removeResult.Errors.Select(e => e.Description).ToList());
-
-        user.IsEnabled = request.IsEnabled;
-        var updateResult = await _userManager.UpdateAsync(user);
-        if (!updateResult.Succeeded)
-            return await Result<string>.FailAsync(updateResult.Errors.Select(e => e.Description).ToList());
-        
-        return await Result<string>.SuccessAsync("IsEnabled flag updated.");
+        return await _identityCommands.SetEnabled(request);
     }
 
     [HttpPost]
@@ -130,19 +64,7 @@ public class IdentityController : ApiControllerBase
     [Authorize(Roles = "Administrator")]
     public async Task<Result<string>> SetRoles(SetRolesRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Username);
-        if (user == null) return await Result<string>.FailAsync("User not found.");
-
-        var existingRoles = await _userManager.GetRolesAsync(user);
-        var removeResult = await _userManager.RemoveFromRolesAsync(user, existingRoles);
-        if (!removeResult.Succeeded)
-            return await Result<string>.FailAsync(removeResult.Errors.Select(e => e.Description).ToList());
-
-        var addResult = await _userManager.AddToRolesAsync(user, request.Roles);
-        if (!addResult.Succeeded)
-            return await Result<string>.FailAsync(addResult.Errors.Select(e => e.Description).ToList());
-
-        return await Result<string>.SuccessAsync("Roles updated.");
+        return await _identityCommands.SetRoles(request);
     }
     
     [HttpGet]
@@ -150,9 +72,7 @@ public class IdentityController : ApiControllerBase
     [Authorize(Roles = "Administrator")]
     public async Task<Result<IEnumerable<UserResponse>>> GetUsers()
     {
-        var query = new GetUsersQuery();
-        var result = await Mediator.Send(query);
-        return result;
+        return await _identityQueries.GetUsersAsync();
     }
     
     [HttpGet]
@@ -160,9 +80,7 @@ public class IdentityController : ApiControllerBase
     [Authorize(Roles = "Administrator")]
     public async Task<Result<IEnumerable<RoleResponse>>> GetRoles()
     {
-        var query = new GetRolesQuery();
-        var result = await Mediator.Send(query);
-        return result;
+        return await _identityQueries.GetRolesAsync();
     }
 
 }
