@@ -22,9 +22,9 @@ public class GetAppUsersQueryHandler : IRequestHandler<GetAppUsersQuery, Result<
     public async Task<Result<IEnumerable<UserResponse>>> Handle(GetAppUsersQuery request, CancellationToken cancellationToken)
     {
         var users = await _context.GetUsers();
-        var data = await users.AsQueryable()
+        var data = users.AsQueryable()
             .Select(UserResponse.Projection)
-            .ToListAsync(cancellationToken: cancellationToken);
+            .ToList();
         
         return await Result<IEnumerable<UserResponse>>.SuccessAsync(data);
     }
