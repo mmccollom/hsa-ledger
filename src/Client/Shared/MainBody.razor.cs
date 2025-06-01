@@ -137,7 +137,7 @@ public partial class MainBody
         private async Task NavigateToManageUsers()
         {
             await _profileMenu!.CloseMenuAsync();
-            _navigationManager.NavigateTo("/admin/managerUsers");
+            _navigationManager.NavigateTo("/admin/manageUsers");
         }
         
         private async Task Logout()
