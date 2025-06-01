@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HsaLedger.Server.Infrastructure.Persistence.Configuration;
 
-public class UserRefreshTokenConfiguration : IEntityTypeConfiguration<UserRefreshToken>
+public class AspNetUserRefreshTokenConfiguration : IEntityTypeConfiguration<AspNetUserRefreshToken>
 {
-    public void Configure(EntityTypeBuilder<UserRefreshToken> builder)
+    public void Configure(EntityTypeBuilder<AspNetUserRefreshToken> builder)
     {
         builder.Property(x => x.UserId).HasMaxLength(450).IsRequired();
         builder.Property(x => x.Hash).HasMaxLength(88).IsRequired();

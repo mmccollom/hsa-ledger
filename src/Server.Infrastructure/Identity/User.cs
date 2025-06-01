@@ -7,5 +7,5 @@ public class User : IdentityUser
 {
     public bool IsEnabled { get; set; }
     
-    public virtual ICollection<UserRefreshToken> RefreshTokens { get; set; } = new List<UserRefreshToken>();
+    public virtual ICollection<AspNetUserRefreshToken> RefreshTokens { get; set; } = new List<AspNetUserRefreshToken>();
 }

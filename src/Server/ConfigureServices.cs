@@ -1,7 +1,6 @@
 using System.Text;
 using FluentValidation.AspNetCore;
-using HsaLedger.Server.Identity;
-using HsaLedger.Server.Identity.Model;
+using HsaLedger.Domain.Common.Model;
 using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Server.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,8 +45,6 @@ public static class ConfigureServices
             .AddDefaultTokenProviders()
             .AddSignInManager();
 
-        services.AddScoped<IdentityQueries>();
-        services.AddScoped<IdentityCommands>();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddHttpContextAccessor();

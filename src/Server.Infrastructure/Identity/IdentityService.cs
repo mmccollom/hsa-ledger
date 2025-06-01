@@ -6,33 +6,31 @@ using HsaLedger.Application.Common.Interfaces;
 using HsaLedger.Application.Requests;
 using HsaLedger.Application.Responses.Identity;
 using HsaLedger.Application.Responses.Projections;
+using HsaLedger.Domain.Common.Model;
 using HsaLedger.Domain.Entities;
-using HsaLedger.Server.Identity.Model;
-using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Shared.Wrapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace HsaLedger.Server.Identity;
+namespace HsaLedger.Server.Infrastructure.Identity;
 
-public class IdentityCommands
+public class IdentityService : IIdentityService
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly JwtConfigurationModel _jwtConfiguration;
     private readonly IApplicationDbContext _context;
 
-
-    public IdentityCommands(UserManager<User> userManager, SignInManager<User> signInManager, JwtConfigurationModel jwtConfiguration, IApplicationDbContext context)
+    public IdentityService(UserManager<User> userManager, SignInManager<User> signInManager, JwtConfigurationModel jwtConfiguration, IApplicationDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtConfiguration = jwtConfiguration;
         _context = context;
     }
-
-    internal async Task<Result<string>> Register(RegisterRequest request)
+    
+    public async Task<Result<string>> Register(RegisterRequest request)
     {
         var user = new User
         {
@@ -49,7 +47,7 @@ public class IdentityCommands
         return await Result<string>.SuccessAsync("User registered.");
     }
     
-    internal async Task<Result<AuthResponse>> Login(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> Login(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
         if (user is not { IsEnabled: true })
@@ -77,7 +75,7 @@ public class IdentityCommands
         return await Result<AuthResponse>.SuccessAsync(authResponse);
     }
     
-    internal async Task<Result<AuthResponse>> Refresh(RefreshRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AuthResponse>> Refresh(RefreshRequest request, CancellationToken cancellationToken = default)
     {
         // Validate and get refresh token data from database
         var refreshTokenData = await GetRefreshDataAsync(request.RefreshToken, cancellationToken);
@@ -105,9 +103,9 @@ public class IdentityCommands
         return await Result<AuthResponse>.SuccessAsync(authResponse);
     }
     
-    internal async Task<Result<string>> ChangePassword(ChangePasswordRequest request, ClaimsPrincipal principalUser)
+    public async Task<Result<string>> ChangePassword(ChangePasswordRequest request, string userId)
     {
-        var user = await _userManager.GetUserAsync(principalUser);
+        var user = await _userManager.FindByIdAsync(userId);
         if (user == null) return await Result<string>.FailAsync("User not found.");
 
         var result = await _userManager.ChangePasswordAsync(user, request.Password, request.NewPassword);
@@ -119,7 +117,7 @@ public class IdentityCommands
         return await Result<string>.SuccessAsync("Password changed.");
     }
     
-    internal async Task<Result<string>> SetEnabled(SetEnabledRequest request)
+    public async Task<Result<string>> SetEnabled(SetEnabledRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null) return await Result<string>.FailAsync("User not found.");
@@ -141,7 +139,7 @@ public class IdentityCommands
         return await Result<string>.SuccessAsync("IsEnabled flag updated.");
     }
     
-    internal async Task<Result<string>> SetRoles(SetRolesRequest request)
+    public async Task<Result<string>> SetRoles(SetRolesRequest request)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null) return await Result<string>.FailAsync("User not found.");
@@ -199,7 +197,7 @@ public class IdentityCommands
         var tokenHash = RefreshTokenService.Hash(refreshToken);
         
         // Persist refresh token
-        var userRefreshToken = new UserRefreshToken
+        var userRefreshToken = new AspNetUserRefreshToken
         {
             UserId = userId,
             Hash = tokenHash.hash,
@@ -209,7 +207,7 @@ public class IdentityCommands
             IpAddress = ipAddress
         };
 
-        await _context.UserRefreshTokens.AddAsync(userRefreshToken, cancellationToken);
+        await _context.AspNetUserRefreshTokens.AddAsync(userRefreshToken, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
         return refreshToken;
     }
@@ -217,7 +215,7 @@ public class IdentityCommands
     private async Task<UserRefreshTokenResponse?> GetRefreshDataAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
         var userRefreshTokens = await _context
-            .UserRefreshTokens
+            .AspNetUserRefreshTokens
             .Where(x => x.IsRevoked == false)
             .Where(x => x.ExpiresAt > DateTime.UtcNow)
             .Select(UserRefreshTokenResponse.Projection)
@@ -229,7 +227,7 @@ public class IdentityCommands
 
     private async Task RevokeRefreshToken(int userRefreshTokenId, CancellationToken cancellationToken = default)
     {
-        var userRefreshToken = await _context.UserRefreshTokens.FirstAsync(x => x.UserRefreshTokenId == userRefreshTokenId, cancellationToken);
+        var userRefreshToken = await _context.AspNetUserRefreshTokens.FirstAsync(x => x.AspNetUserRefreshTokenId == userRefreshTokenId, cancellationToken);
         userRefreshToken.IsRevoked = true;
         await _context.SaveChangesAsync(cancellationToken);
     }

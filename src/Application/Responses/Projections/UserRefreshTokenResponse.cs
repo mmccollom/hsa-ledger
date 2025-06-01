@@ -19,13 +19,13 @@ public class UserRefreshTokenResponse
     public string? LastUpdatedBy { get; set; }
     public int LockId { get; set; }
     
-    public static Expression<Func<Domain.Entities.UserRefreshToken, UserRefreshTokenResponse>> Projection
+    public static Expression<Func<Domain.Entities.AspNetUserRefreshToken, UserRefreshTokenResponse>> Projection
     {
         get
         {
             return x => new UserRefreshTokenResponse
             {
-                UserRefreshTokenId = x.UserRefreshTokenId,
+                UserRefreshTokenId = x.AspNetUserRefreshTokenId,
                 UserId = x.UserId,
                 Hash = x.Hash,
                 Salt = x.Salt,

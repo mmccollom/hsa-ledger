@@ -1,4 +1,5 @@
 using HsaLedger.Application.Common.Interfaces;
+using HsaLedger.Server.Infrastructure.Identity;
 using HsaLedger.Server.Infrastructure.Persistence;
 using HsaLedger.Server.Infrastructure.Persistence.Interceptors;
 using HsaLedger.Server.Infrastructure.Services;
@@ -26,6 +27,7 @@ public static class ConfigureServices
         services.AddScoped<ApplicationDbContextInitializer>();
         services.AddTransient<ICurrentUserService, CurrentUserService>();
         services.AddTransient<IDateTime, DateTimeService>();
+        services.AddTransient<IIdentityService, IdentityService>();
         //services.AddTransient<IExcelService, ExcelService>();
         //services.AddTransient<IOncorIntervalParseService, OncorIntervalParseService>();
         return services;

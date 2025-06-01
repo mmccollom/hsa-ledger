@@ -4,11 +4,11 @@ using HsaLedger.Domain.Common.Persistence;
 
 namespace HsaLedger.Domain.Entities;
 
-public class UserRefreshToken : BaseAuditableEntity
+public class AspNetUserRefreshToken : BaseAuditableEntity
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int UserRefreshTokenId { get; set; }
+    public int AspNetUserRefreshTokenId { get; set; }
     
     public required string UserId { get; set; }
     

@@ -1,4 +1,4 @@
-namespace HsaLedger.Server.Identity.Model;
+namespace HsaLedger.Domain.Common.Model;
 
 public class JwtConfigurationModel
 {

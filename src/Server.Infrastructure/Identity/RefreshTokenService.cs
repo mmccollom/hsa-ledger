@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace HsaLedger.Server.Identity;
+namespace HsaLedger.Server.Infrastructure.Identity;
 
 internal static class RefreshTokenService
 {

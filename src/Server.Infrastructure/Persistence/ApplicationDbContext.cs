@@ -27,7 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole, string
     public DbSet<Provider> Providers => Set<Provider>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionType> TransactionTypes => Set<TransactionType>();
-    public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
+    public DbSet<AspNetUserRefreshToken> AspNetUserRefreshTokens => Set<AspNetUserRefreshToken>();
     
     public async Task<IEnumerable<AppUser>> GetUsers()
     {
