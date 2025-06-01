@@ -35,7 +35,7 @@ public class TransactionModel
     public string GetDocumentNames()
     {
         var documents = string.Join(",", Documents.Select(t => t.Fullname));
-        return documents.Length > 100 ? string.Concat(documents.AsSpan(0, 100), "...") : documents;
+        return documents.Length > 50 ? string.Concat(documents.AsSpan(0, 50), "...") : documents;
     }
     
     public List<IBrowserFile>? FilesPendingUpload { get; set; }
