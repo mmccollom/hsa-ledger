@@ -34,7 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lambda.Infrastructure", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lambda.EmailReader", "src\Lambda.EmailReader\Lambda.EmailReader.csproj", "{4DAAC084-29D0-4951-8810-3ED8BABB3A4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lambda.SecretRotation", "Lambda.SecretRotation\Lambda.SecretRotation.csproj", "{AD290DC0-82D0-4E2E-82C0-C962C778827B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lambda.SecretRotation", "src\Lambda.SecretRotation\Lambda.SecretRotation.csproj", "{AD290DC0-82D0-4E2E-82C0-C962C778827B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
